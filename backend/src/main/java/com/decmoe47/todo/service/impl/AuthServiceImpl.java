@@ -1,0 +1,106 @@
+package com.decmoe47.todo.service.impl;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.text.CharSequenceUtil;
+import com.decmoe47.todo.constant.MailTemplate;
+import com.decmoe47.todo.constant.enums.ErrorCodeEnum;
+import com.decmoe47.todo.exception.ErrorResponseException;
+import com.decmoe47.todo.model.dto.UserLoginDTO;
+import com.decmoe47.todo.model.dto.UserRegisterDTO;
+import com.decmoe47.todo.model.entity.TodoList;
+import com.decmoe47.todo.model.entity.User;
+import com.decmoe47.todo.model.vo.UserVO;
+import com.decmoe47.todo.repository.TodoListRepository;
+import com.decmoe47.todo.repository.UserRepository;
+import com.decmoe47.todo.service.AuthService;
+import com.decmoe47.todo.service.MailService;
+import com.decmoe47.todo.service.VerificationCodeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@RequiredArgsConstructor
+@Service
+public class AuthServiceImpl implements AuthService {
+
+    private final MailService mailService;
+    private final UserRepository userRepo;
+    private final TodoListRepository todoListRepo;
+    private final VerificationCodeService verificationCodeService;
+    private final AuthenticationManager authenticationManager;
+
+    @Transactional(rollbackFor = Exception.class)
+    public UserVO login(UserLoginDTO userLoginDTO) {
+        Authentication authentication = authenticate(userLoginDTO.getEmail(), userLoginDTO.getPassword());
+        User user = (User) authentication.getPrincipal();
+
+        return BeanUtil.toBean(user, UserVO.class);
+    }
+
+    public UserVO register(UserRegisterDTO userRegisterDTO) {
+        if (userRepo.findByEmail(userRegisterDTO.getEmail()).isPresent())
+            throw new ErrorResponseException(ErrorCodeEnum.USER_ALREADY_EXISTS);
+
+        verificationCodeService.checkCode(userRegisterDTO.getVerificationCode());
+
+        User user = BeanUtil.toBean(userRegisterDTO, User.class);
+        user = saveNewUser(user);
+
+        createInboxTodoList(user);
+
+        return BeanUtil.toBean(user, UserVO.class);
+    }
+
+    public void sendVerifyCode(String email) {
+        String code = verificationCodeService.createCode();
+        List<String> toList = List.of(email);
+        boolean sent = mailService.send(
+                toList, MailTemplate.VERIFY_CODE_SUBJECT, MailTemplate.VERIFY_CODE_BODY.replace("{code}", code));
+        if (!sent)
+            throw new ErrorResponseException(ErrorCodeEnum.VERIFY_CODE_SEND_FAILED);
+    }
+
+    @Override
+    public UserVO getUser(long userId) {
+        User user = userRepo.findById(userId).orElseThrow(() -> new ErrorResponseException(ErrorCodeEnum.USER_NOT_FOUND));
+        return BeanUtil.toBean(user, UserVO.class);
+    }
+
+    private Authentication authenticate(String email, String password) {
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(email, password);
+        Authentication authenticate = authenticationManager.authenticate(token);
+
+        User user = (User) authenticate.getPrincipal();
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime plusDays = now.plusDays(30);
+        user.setLastLoginTime(now).setCredentialExpireTime(plusDays);
+        userRepo.save(user);
+
+        SecurityContextHolder.getContext().setAuthentication(authenticate);
+
+        return authenticate;
+    }
+
+    private User saveNewUser(User user) {
+        if (CharSequenceUtil.isNotEmpty(user.getPassword())) {
+            BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+            user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        }
+        return userRepo.save(user);
+    }
+
+    private void createInboxTodoList(User user) {
+        TodoList todoList = new TodoList();
+        todoList.setIsInbox(true).setName("INBOX").setCreatedBy(user);
+        todoListRepo.save(todoList);
+    }
+}
