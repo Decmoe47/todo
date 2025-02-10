@@ -3,29 +3,37 @@ import type { TodoAddDTO, TodoDTO, TodoListDTO, TodoUpdateDTO } from '@/types/to
 import axiosInstance from '@/libs/axios.ts'
 
 interface TodoState {
-  todoLists: TodoListDTO[]
+  customTodoLists: TodoListDTO[]
 }
 
 export const useTodoStore = defineStore('todoList', {
   state: (): TodoState => ({
-    todoLists: [],
+    customTodoLists: [],
   }),
 
   actions: {
-    async getAllLists(userId: number) {
-      this.todoLists = await axiosInstance.get<TodoListDTO[], TodoListDTO[]>('todoLists', {
+    async getCustomLists(userId: number) {
+      this.customTodoLists = await axiosInstance.get<TodoListDTO[], TodoListDTO[]>('todoLists/custom', {
         params: { userId: userId },
       })
     },
     getListName(listId: string) {
-      return this.todoLists.find((t) => t.id === listId)?.name ?? ''
+      return this.customTodoLists.find((t) => t.id === listId)?.name ?? ''
+    },
+    async addList(name: string) {
+      const list = await axiosInstance.post<TodoListDTO, TodoListDTO>('todoLists/add', {
+        name: name,
+      })
+      this.customTodoLists.push(list)
+      return list
     },
 
-    async getTodos(userId: number, listId: string) {
+    async getTodos(userId: number, listId: string, inbox: boolean = false) {
       return await axiosInstance.get<TodoDTO[], TodoDTO[]>('todos', {
         params: {
           userId: userId,
           listId: listId,
+          inbox: inbox,
         },
       })
     },
@@ -50,7 +58,7 @@ export const useTodoStore = defineStore('todoList', {
 
   getters: {
     inboxListId(): string {
-      return this.todoLists.find((t) => t.isInbox)!.id
+      return this.customTodoLists.find((t) => t.inbox)!.id
     },
   },
 })

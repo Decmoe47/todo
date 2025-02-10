@@ -25,5 +25,5 @@ export interface TodoUpdateDTO {
 export interface TodoListDTO {
   id: string
   name: string
-  isInbox: boolean
+  inbox: boolean
 }

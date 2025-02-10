@@ -24,7 +24,7 @@ public class TodoList extends Auditable<User> {
 
     private String name;
 
-    private Boolean isInbox = false;
+    private Boolean inbox = false;
 
     @OneToMany(mappedBy = "belongedList")
     private List<Todo> todos;

@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface TodoListRepository extends BaseRepository<TodoList, String> {
 
-    List<TodoList> findByCreatedById(long userId);
+    List<TodoList> findByCreatedByIdAndInboxFalse(long userId);
 }

@@ -100,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
 
     private void createInboxTodoList(User user) {
         TodoList todoList = new TodoList();
-        todoList.setIsInbox(true).setName("INBOX").setCreatedBy(user);
+        todoList.setInbox(true).setName("inbox").setCreatedBy(user);
         todoListRepo.save(todoList);
     }
 }

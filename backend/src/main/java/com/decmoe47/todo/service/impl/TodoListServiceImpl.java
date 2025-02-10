@@ -26,8 +26,8 @@ public class TodoListServiceImpl implements TodoListService {
     private final UserRepository userRepo;
 
     @Override
-    public List<TodoListVO> getTodoLists(long userId) {
-        List<TodoList> lists = todoListRepo.findByCreatedById(userId);
+    public List<TodoListVO> getCustomTodoLists(long userId) {
+        List<TodoList> lists = todoListRepo.findByCreatedByIdAndInboxFalse(userId);
         return BeanUtil.copyToList(lists, TodoListVO.class);
     }
 

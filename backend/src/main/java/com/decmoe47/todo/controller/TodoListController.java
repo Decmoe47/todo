@@ -18,9 +18,9 @@ public class TodoListController {
 
     private final TodoListService todoListService;
 
-    @GetMapping
-    public R<List<TodoListVO>> getTodoLists(@RequestParam long userId) {
-        return R.ok(todoListService.getTodoLists(userId));
+    @GetMapping("/custom")
+    public R<List<TodoListVO>> getCustomTodoLists(@RequestParam long userId) {
+        return R.ok(todoListService.getCustomTodoLists(userId));
     }
 
     @PostMapping("/add")

@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import { useTodoStore } from '@/stores/todo.ts'
 import { useUserStore } from '@/stores/user.ts'
@@ -41,23 +41,27 @@ const listName = ref('')
 const todos = ref<TodoDTO[]>([])
 const newTodoContent = ref('')
 
-let listId = route.params.listId as string
+const listId = computed(() => route.params.listId as string)
 
 watchEffect(async () => {
-  if (todoStore.todoLists.length === 0) return
-
-  if (!listId || listId === 'inbox') {
-    listId = todoStore.inboxListId
-  }
+  if (todoStore.customTodoLists.length === 0) return
 
   if (userStore.userId) {
-    todos.value = await todoStore.getTodos(userStore.userId, listId)
+    if (listId.value === 'inbox') {
+      todos.value = await todoStore.getTodos(userStore.userId, listId.value, true)
+      listName.value = 'Inbox'
+    } else {
+      todos.value = await todoStore.getTodos(userStore.userId, listId.value)
+      listName.value = todoStore.getListName(listId.value)
+    }
   }
-  listName.value = todoStore.getListName(listId)
 })
 
 const addTodo = async () => {
-  const todoDTO = await todoStore.addTodo({ content: newTodoContent.value, belongedListId: listId })
+  const todoDTO = await todoStore.addTodo({
+    content: newTodoContent.value,
+    belongedListId: listId.value,
+  })
   todos.value.push(todoDTO)
   newTodoContent.value = ''
 }
