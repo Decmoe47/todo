@@ -45,6 +45,7 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public Authentication parse(String token) {
+        token = trimPrefix(token);
         JSONObject payloads = JWTUtil.parseToken(token).getPayloads();
         Long userId = payloads.getLong(JwtConstants.USER_ID);
         String email = payloads.getStr(JwtConstants.EMAIL);
@@ -55,6 +56,7 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public boolean isValidated(String token) {
+        token = trimPrefix(token);
         if (!JWTUtil.verify(token, securityProperties.getSecretKey().getBytes())) {
             return false;
         }
@@ -65,6 +67,7 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public AuthenticationTokensVO refresh(String refreshToken) {
+        refreshToken = trimPrefix(refreshToken);
         JSONObject payloads = JWTUtil.parseToken(refreshToken).getPayloads();
         Long userId = payloads.getLong(JwtConstants.USER_ID);
         String email = payloads.getStr(JwtConstants.EMAIL);
@@ -79,6 +82,7 @@ public class TokenServiceImpl implements TokenService {
 
     @Override
     public void invalidate(String token) {
+        token = trimPrefix(token);
         JSONObject payloads = JWTUtil.parseToken(token).getPayloads();
         String jwtId = payloads.getStr(JWTPayload.JWT_ID);
         Integer expiresAt = payloads.getInt(JWTPayload.EXPIRES_AT);
@@ -117,5 +121,9 @@ public class TokenServiceImpl implements TokenService {
         claims.put(JWTPayload.JWT_ID, IdUtil.simpleUUID());
 
         return JWTUtil.createToken(claims, securityProperties.getSecretKey().getBytes());
+    }
+
+    private String trimPrefix(String token) {
+        return StrUtil.replace(token, JwtConstants.BEARER_PREFIX, StrUtil.EMPTY);
     }
 }

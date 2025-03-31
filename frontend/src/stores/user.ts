@@ -27,8 +27,9 @@ export const useUserStore = defineStore('user', {
 
     async refreshToken() {
       const refreshToken = getRefreshToken()
-      const tokens = await axiosInstance.post<AuthenticationTokens, AuthenticationTokens>(
-        'auth/refresh-token', { refreshToken: refreshToken })
+      const tokens = await axiosInstance.post<AuthenticationTokens, AuthenticationTokens>('auth/refresh-token', {
+        refreshToken: refreshToken,
+      })
 
       setAccessToken(tokens.accessToken)
       setRefreshToken(tokens.refreshToken)
@@ -44,8 +45,9 @@ export const useUserStore = defineStore('user', {
     },
 
     async getUser() {
-      const userDTO = await axiosInstance.get<UserDTO, UserDTO>(
-        'users/by-token', { params: { token: getAccessToken() } })
+      const userDTO = await axiosInstance.get<UserDTO, UserDTO>('users/by-token', {
+        params: { token: getAccessToken() },
+      })
       this.user = userDTO
       return userDTO
     },
@@ -61,6 +63,6 @@ export const useUserStore = defineStore('user', {
   },
 
   getters: {
-    userId: (state: UserState) => state.user!.id,
+    userId: (state: UserState) => state.user?.id,
   },
 })
