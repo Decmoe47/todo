@@ -15,17 +15,17 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const accessToken = getAccessToken();
-    if (config.headers.Authorization !== "no-auth" && accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    const accessToken = getAccessToken()
+    if (config.headers.Authorization !== 'no-auth' && accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`
     } else {
-      delete config.headers.Authorization;
+      delete config.headers.Authorization
     }
     return config
   },
   (error) => {
     return Promise.reject(error)
-  }
+  },
 )
 
 axiosInstance.interceptors.response.use(
@@ -79,19 +79,19 @@ async function handleTokenRefresh() {
   try {
     await useUserStore(pinia).refreshToken()
   } catch (e) {
-    console.error("handleTokenRefresh error", e);
-    await handleSessionExpired();
+    console.error('handleTokenRefresh error', e)
+    await handleSessionExpired()
   }
 }
 
 async function handleSessionExpired() {
   ElNotification({
-    title: "提示",
-    message: "您的会话已过期，请重新登录",
-    type: "info",
-  });
-  useUserStore(pinia).clearSessionAndCache();
-  await router.push("/login");
+    title: '提示',
+    message: '您的会话已过期，请重新登录',
+    type: 'info',
+  })
+  useUserStore(pinia).clearSessionAndCache()
+  await router.push('/login')
 }
 
 export default axiosInstance

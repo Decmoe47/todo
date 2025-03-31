@@ -28,11 +28,11 @@
 </template>
 
 <script setup lang="ts">
-import { useTodoStore } from '@/stores/todo.ts';
-import { useUserStore } from '@/stores/user.ts';
-import type { TodoDTO } from '@/types/todo.ts';
-import { computed, ref, watchEffect } from 'vue';
-import { useRoute } from 'vue-router';
+import { useTodoStore } from '@/stores/todo.ts'
+import { useUserStore } from '@/stores/user.ts'
+import type { TodoDTO } from '@/types/todo.ts'
+import { computed, ref, watchEffect } from 'vue'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -61,18 +61,17 @@ const deleteTodo = async (id: number) => {
 }
 
 watchEffect(async () => {
-    if (todoStore.customTodoLists.length === 0) return
+  if (todoStore.customTodoLists.length === 0) return
 
-    if (userStore.userId) {
-      if (listId.value === 'inbox') {
-        listName.value = 'Inbox'
-      } else {
-        listName.value = todoStore.getListName(listId.value)
-      }
-      todos.value = await todoStore.getTodos(userStore.userId, listId.value)
+  if (userStore.userId) {
+    if (listId.value === 'inbox') {
+      listName.value = 'Inbox'
+    } else {
+      listName.value = todoStore.getListName(listId.value)
     }
+    todos.value = await todoStore.getTodos(userStore.userId, listId.value)
   }
-)
+})
 </script>
 
 <style scoped>

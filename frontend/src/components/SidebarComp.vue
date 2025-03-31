@@ -73,7 +73,6 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useTodoStore } from '@/stores/todo.ts'
 import ContextMenuComp from '@/components/ContextMenuComp.vue'
-import type { SidebarContextMenuOption } from '@/types/todo.ts'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
@@ -93,7 +92,7 @@ const onContextMenu = (e: MouseEvent, listId: string) => {
   rightClickedListId.value = listId
 }
 
-const handleMenuClick = async (action: SidebarContextMenuOption) => {
+const handleMenuClick = async (action: string) => {
   switch (action) {
     case 'rename':
       renameListNewName.value =
@@ -102,6 +101,7 @@ const handleMenuClick = async (action: SidebarContextMenuOption) => {
       break
     case 'delete':
       await todoStore.deleteList(rightClickedListId.value)
+      await router.push('/p/inbox')
       ElMessage.success('List deleted successfully')
       break
   }

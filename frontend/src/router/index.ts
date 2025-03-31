@@ -39,7 +39,7 @@ const router = createRouter({
 const authWhiteList = ['/login', '/register', '/logout']
 
 router.beforeEach(async (to, from, next) => {
-  const isLogin = !!getAccessToken();
+  const isLogin = !!getAccessToken()
   const userStore = useUserStore()
 
   if (isLogin && !userStore.user) {
@@ -49,18 +49,18 @@ router.beforeEach(async (to, from, next) => {
   if (isLogin) {
     // 已登录用户访问登录页时，重定向到首页
     if (to.path === '/login') {
-      next('/');
+      next('/')
     } else {
-      next();
+      next()
     }
   } else {
     // 未登录用户访问非白名单路径时，跳转到登录页
     if (authWhiteList.includes(to.path)) {
-      next();
+      next()
     } else {
-      next('/login');
+      next('/login')
     }
   }
-});
+})
 
 export default router

@@ -8,7 +8,12 @@
     }"
   >
     <el-menu class="context-menu-inner">
-      <el-menu-item v-for="(item, key) in menuItemNames" :key="key" @click="() => handleMenuClick(key)" :index="key">
+      <el-menu-item
+        v-for="(item, key) in menuItemNames"
+        :key="key"
+        @click="() => handleMenuClick(key as string)"
+        :index="key"
+      >
         {{ item }}
       </el-menu-item>
     </el-menu>
@@ -17,22 +22,21 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import type { SidebarContextMenuOption } from '@/types/todo.ts'
 
 defineProps<{
   menuItemNames: { [key: string]: string }
 }>()
-const emits = defineEmits<{ (event: 'menuClick', action: SidebarContextMenuOption): void }>()
+const emits = defineEmits<{ (event: 'menuClick', action: string): void }>()
 
 const visible = ref(false)
 const x = ref(0)
 const y = ref(0)
 
-const handleMenuClick = (action: SidebarContextMenuOption) => {
+const handleMenuClick = (action: string) => {
   emits('menuClick', action)
   hide()
 }
-const show = (e) => {
+const show = (e: MouseEvent) => {
   e.preventDefault()
   x.value = e.clientX
   y.value = e.clientY
@@ -74,5 +78,6 @@ defineExpose({
   height: 34px;
   border-radius: 5px;
   font-size: 13px;
+  color: #303133 !important;
 }
 </style>
