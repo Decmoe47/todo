@@ -1,6 +1,7 @@
 package com.decmoe47.todo.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.decmoe47.todo.constant.TodoConstants;
 import com.decmoe47.todo.constant.enums.ErrorCodeEnum;
 import com.decmoe47.todo.exception.ErrorResponseException;
 import com.decmoe47.todo.model.dto.TodoAddDTO;
@@ -14,6 +15,7 @@ import com.decmoe47.todo.model.vo.TodoVO;
 import com.decmoe47.todo.repository.TodoListRepository;
 import com.decmoe47.todo.repository.TodoRepository;
 import com.decmoe47.todo.repository.UserRepository;
+import com.decmoe47.todo.service.InboxCacheService;
 import com.decmoe47.todo.service.TodoService;
 import com.decmoe47.todo.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +31,15 @@ public class TodoServiceImpl implements TodoService {
     private final TodoRepository todoRepo;
     private final TodoListRepository todoListRepo;
     private final UserRepository userRepo;
+    private final InboxCacheService inboxCacheService;
 
     @Override
-    public List<TodoVO> getTodos(long userId, String listId, boolean inbox) {
+    public List<TodoVO> getTodos(long userId, String listId) {
         List<Todo> todos;
-        if (inbox) {
-            todos = todoRepo.findByCreatedByIdAndBelongedList_InboxTrue(userId);
-        } else {
-            todos = todoRepo.findByCreatedByIdAndBelongedList_Id(userId, listId);
+        if (TodoConstants.INBOX.equals(listId)) {
+            listId = inboxCacheService.getInboxId(userId);
         }
+        todos = todoRepo.findByCreatedByIdAndBelongedList_Id(userId, listId);
         return BeanUtil.copyToList(todos, TodoVO.class);
     }
 
@@ -47,7 +49,10 @@ public class TodoServiceImpl implements TodoService {
                 .orElseThrow(() -> new ErrorResponseException(ErrorCodeEnum.USER_NOT_FOUND));
         Todo todo = BeanUtil.toBean(todoAddDTO, Todo.class);
 
-        TodoList todoList = todoListRepo.findById(todoAddDTO.getBelongedListId())
+        String listId = TodoConstants.INBOX.equals(todoAddDTO.getBelongedListId())
+                ? inboxCacheService.getInboxId(user.getId())
+                : todoAddDTO.getBelongedListId();
+        TodoList todoList = todoListRepo.findById(listId)
                 .orElseThrow(() -> new ErrorResponseException(ErrorCodeEnum.TODO_LIST_NOT_FOUND));
         todo.setBelongedList(todoList);
 

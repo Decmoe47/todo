@@ -20,8 +20,8 @@ public class TodoController {
     private final TodoService todoService;
 
     @GetMapping
-    public R<List<TodoVO>> getTodos(@RequestParam long userId, @RequestParam String listId, @RequestParam Boolean inbox) {
-        return R.ok(todoService.getTodos(userId, listId, inbox));
+    public R<List<TodoVO>> getTodos(@RequestParam long userId, @RequestParam String listId) {
+        return R.ok(todoService.getTodos(userId, listId));
     }
 
     @PostMapping("/add")

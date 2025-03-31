@@ -65,12 +65,11 @@ watchEffect(async () => {
 
     if (userStore.userId) {
       if (listId.value === 'inbox') {
-        todos.value = await todoStore.getTodos(userStore.userId, listId.value, true)
         listName.value = 'Inbox'
       } else {
-        todos.value = await todoStore.getTodos(userStore.userId, listId.value)
         listName.value = todoStore.getListName(listId.value)
       }
+      todos.value = await todoStore.getTodos(userStore.userId, listId.value)
     }
   }
 )

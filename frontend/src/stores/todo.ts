@@ -28,12 +28,11 @@ export const useTodoStore = defineStore('todoList', {
       return list
     },
 
-    async getTodos(userId: number, listId: string, inbox: boolean = false) {
+    async getTodos(userId: number, listId: string) {
       return await axiosInstance.get<TodoDTO[], TodoDTO[]>('todos', {
         params: {
           userId: userId,
-          listId: listId,
-          inbox: inbox,
+          listId: listId
         },
       })
     },

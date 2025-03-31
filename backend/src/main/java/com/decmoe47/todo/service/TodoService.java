@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface TodoService {
 
-    List<TodoVO> getTodos(long userId, String listId, boolean inbox);
+    List<TodoVO> getTodos(long userId, String listId);
 
     TodoVO addTodo(TodoAddDTO todoAddDTO);
 
