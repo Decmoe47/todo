@@ -8,13 +8,8 @@
     }"
   >
     <el-menu class="context-menu-inner">
-      <el-menu-item
-        v-for="(item, key) in menuItemNames"
-        :key="key"
-        @click="() => handleMenuClick(key as string)"
-        :index="key"
-      >
-        {{ item }}
+      <el-menu-item v-for="(item, key) in menuItems" :key="key" @click="() => handleMenuClick(item)" :index="key">
+        {{ item.name }}
       </el-menu-item>
     </el-menu>
   </div>
@@ -22,18 +17,21 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import type { MenuItem } from '@/types/menu.ts'
 
 defineProps<{
-  menuItemNames: { [key: string]: string }
+  menuItems: {
+    [key: string]: MenuItem
+  }
 }>()
-const emits = defineEmits<{ (event: 'menuClick', action: string): void }>()
+const emits = defineEmits<{ (event: 'menuClick', menuItem: MenuItem): void }>()
 
 const visible = ref(false)
 const x = ref(0)
 const y = ref(0)
 
-const handleMenuClick = (action: string) => {
-  emits('menuClick', action)
+const handleMenuClick = (menuItem: MenuItem) => {
+  emits('menuClick', menuItem)
   hide()
 }
 const show = (e: MouseEvent) => {

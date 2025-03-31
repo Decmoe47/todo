@@ -47,14 +47,7 @@
       </el-dropdown>
     </div>
 
-    <ContextMenuComp
-      ref="contextMenuRef"
-      @menu-click="handleMenuClick"
-      :menu-item-names="{
-        rename: 'Rename',
-        delete: 'Delete',
-      }"
-    />
+    <ContextMenuComp ref="contextMenuRef" @menu-click="handleMenuClick" :menu-items="menuItems" />
 
     <!-- 重命名对话框 -->
     <el-dialog title="Rename todo list" v-model:visible="renameModalVisible" width="30%">
@@ -74,6 +67,7 @@ import { useUserStore } from '@/stores/user'
 import { useTodoStore } from '@/stores/todo.ts'
 import ContextMenuComp from '@/components/ContextMenuComp.vue'
 import { ElMessage } from 'element-plus'
+import type { MenuItem } from '@/types/menu.ts'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -87,24 +81,29 @@ const rightClickedListId = ref('')
 const renameModalVisible = ref(false) // 控制重命名对话框显示
 const renameListNewName = ref('') // 存储新的名称
 
-const onContextMenu = (e: MouseEvent, listId: string) => {
-  contextMenuRef.value.show(e)
-  rightClickedListId.value = listId
-}
-
-const handleMenuClick = async (action: string) => {
-  switch (action) {
-    case 'rename':
+const menuItems: { [key: string]: MenuItem } = {
+  rename: {
+    name: 'Rename',
+    action: async () => {
       renameListNewName.value =
         todoStore.customTodoLists.find((list) => list.id === rightClickedListId.value)?.name || ''
       renameModalVisible.value = true
-      break
-    case 'delete':
+    },
+  },
+  delete: {
+    name: 'Delete',
+    action: async () => {
       await todoStore.deleteList(rightClickedListId.value)
       await router.push('/p/inbox')
       ElMessage.success('List deleted successfully')
-      break
-  }
+    },
+  },
+}
+const handleMenuClick = async (menuItem: MenuItem) => await menuItem.action()
+
+const onContextMenu = (e: MouseEvent, listId: string) => {
+  contextMenuRef.value.show(e)
+  rightClickedListId.value = listId
 }
 
 const confirmRename = async () => {
