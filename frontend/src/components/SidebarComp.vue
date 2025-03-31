@@ -1,9 +1,11 @@
 <template>
   <div class="sidebar-container">
     <el-menu mode="vertical" :default-active="$route.path" :router="true" class="sidebar-menu">
-      <el-menu-item index="/p/inbox">Inbox</el-menu-item>
-      <el-divider />
-      <div style="padding: 0 20px 10px 10px; margin-bottom: 10px">
+      <el-menu-item index="/p/inbox" :class="{ 'active-item': $route.path === `/p/inbox` }"> Inbox </el-menu-item>
+
+      <el-divider style="margin: 10px auto" />
+
+      <div style="padding: 10px 10px 5px 10px; margin-bottom: 10px">
         <el-button type="primary" @click="showNewListInput" icon="Plus"> New List </el-button>
         <el-input
           ref="newListNameInput"
@@ -15,76 +17,114 @@
           style="margin-top: 5px"
         />
       </div>
+
       <el-menu-item
         v-for="list in todoStore.customTodoLists"
         :key="list.id"
         :index="`/p/${list.id}`"
-        @contextmenu="(e) => onContextMenu(e, list.id)"
+        @contextmenu="(e: MouseEvent) => onContextMenu(e, list.id)"
+        :class="{ 'active-item': $route.path === `/p/${list.id}` }"
       >
         {{ list.name }}
       </el-menu-item>
     </el-menu>
 
     <!-- 用户信息区域 -->
-    <div class="user-info">
+    <div class="user-info-menu">
+      <el-divider style="margin: 10px auto" />
+
       <el-dropdown @command="handleCommand">
         <div class="user-info-content">
           <el-avatar :size="40" icon="UserFilled" />
           <span class="username">{{ userStore.user!.name }}</span>
         </div>
         <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item command="profile">Profile</el-dropdown-item>
-            <el-dropdown-item command="logout" divided>Logout</el-dropdown-item>
+          <el-dropdown-menu style="padding: 5px; border-radius: 5px">
+            <el-dropdown-item command="profile" style="border-radius: 5px">Profile</el-dropdown-item>
+            <el-dropdown-item command="logout" style="border-radius: 5px" divided>Logout</el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
     </div>
 
-    <SidebarContextMenuComp ref="contextMenuRef" @menu-click="handleMenuClick" />
+    <ContextMenuComp
+      ref="contextMenuRef"
+      @menu-click="handleMenuClick"
+      :menu-item-names="{
+        rename: 'Rename',
+        delete: 'Delete',
+      }"
+    />
+
+    <!-- 重命名对话框 -->
+    <el-dialog title="Rename todo list" v-model:visible="renameModalVisible" width="30%">
+      <el-input v-model="renameListNewName" placeholder="Enter new name"></el-input>
+      <template #footer>
+        <el-button @click="renameModalVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="confirmRename">OK</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
+import { nextTick, ref, watchEffect } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useTodoStore } from '@/stores/todo.ts'
-import { nextTick, ref, watchEffect } from 'vue'
-import SidebarContextMenuComp from '@/components/SidebarContextMenuComp.vue'
+import ContextMenuComp from '@/components/ContextMenuComp.vue'
 import type { SidebarContextMenuOption } from '@/types/todo.ts'
-import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const userStore = useUserStore()
 const todoStore = useTodoStore()
+
 const newListNameInputShown = ref(false)
 const newListName = ref('')
 const newListNameInput = ref()
 const contextMenuRef = ref()
 const rightClickedListId = ref('')
-const showUserMenu = ref(false)
+const renameModalVisible = ref(false) // 控制重命名对话框显示
+const renameListNewName = ref('') // 存储新的名称
 
 const onContextMenu = (e: MouseEvent, listId: string) => {
   contextMenuRef.value.show(e)
   rightClickedListId.value = listId
 }
-const handleMenuClick = (action: SidebarContextMenuOption) => {
+
+const handleMenuClick = async (action: SidebarContextMenuOption) => {
   switch (action) {
     case 'rename':
-      console.log(rightClickedListId.value)
+      renameListNewName.value =
+        todoStore.customTodoLists.find((list) => list.id === rightClickedListId.value)?.name || ''
+      renameModalVisible.value = true
       break
     case 'delete':
+      await todoStore.deleteList(rightClickedListId.value)
+      ElMessage.success('List deleted successfully')
       break
   }
 }
+
+const confirmRename = async () => {
+  if (renameListNewName.value) {
+    await todoStore.updateListName(rightClickedListId.value, renameListNewName.value)
+    renameModalVisible.value = false
+  }
+}
+
 const showNewListInput = async () => {
   newListNameInputShown.value = true
   await nextTick()
   newListNameInput.value.focus()
 }
+
 const hideNewListInput = () => {
   newListNameInputShown.value = false
   newListName.value = ''
 }
+
 const createNewList = async () => {
   if (newListName.value) {
     await todoStore.addList(newListName.value)
@@ -94,12 +134,10 @@ const createNewList = async () => {
 }
 
 const handleLogout = async () => {
-  showUserMenu.value = false
   await userStore.logout()
   await router.push('/login')
 }
 
-// 处理下拉菜单命令
 const handleCommand = (command: string) => {
   switch (command) {
     case 'profile':
@@ -120,20 +158,36 @@ watchEffect(async () => {
 <style scoped>
 .sidebar-container {
   position: relative;
-  height: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .sidebar-menu {
   flex: 1;
   overflow: auto;
+  padding: 10px 10px;
+  min-height: 0;
 }
 
-.user-info {
-  padding: 16px;
-  border-top: 1px solid var(--el-menu-border-color);
+.el-menu-item {
+  height: 40px;
+  border-radius: 5px;
+}
+
+.el-menu-item:hover:not(.active-item) {
+  background-color: #f5f5f5 !important; /* 修改鼠标移上去的背景色，但不影响当前选中的淡蓝色 */
+}
+
+.active-item {
+  background-color: #e6f7ff !important;
+}
+
+.user-info-menu {
+  padding: 10px 10px;
   border-right: 1px solid var(--el-menu-border-color);
+  flex-shrink: 0;
 }
 
 .user-info-content {
@@ -142,7 +196,18 @@ watchEffect(async () => {
   cursor: pointer;
 }
 
+.user-info-content:focus,
+.el-avatar:focus {
+  outline: none;
+  border: none;
+}
+
 .username {
   margin-left: 10px;
+}
+
+.user-info-sub-menu {
+  padding: 5px;
+  border-radius: 5px;
 }
 </style>

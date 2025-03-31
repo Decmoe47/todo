@@ -4,11 +4,11 @@
     class="context-menu"
     :style="{
       left: x + 'px',
-      top: y + 'px'
+      top: y + 'px',
     }"
   >
-    <el-menu>
-      <el-menu-item v-for="(item, key) in menuItems" :key="key" @click="() => handleMenuClick(key)" :index="key">
+    <el-menu class="context-menu-inner">
+      <el-menu-item v-for="(item, key) in menuItemNames" :key="key" @click="() => handleMenuClick(key)" :index="key">
         {{ item }}
       </el-menu-item>
     </el-menu>
@@ -19,15 +19,14 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { SidebarContextMenuOption } from '@/types/todo.ts'
 
+defineProps<{
+  menuItemNames: { [key: string]: string }
+}>()
 const emits = defineEmits<{ (event: 'menuClick', action: SidebarContextMenuOption): void }>()
 
 const visible = ref(false)
 const x = ref(0)
 const y = ref(0)
-const menuItems = {
-  rename: '重命名',
-  delete: '删除'
-}
 
 const handleMenuClick = (action: SidebarContextMenuOption) => {
   emits('menuClick', action)
@@ -52,7 +51,7 @@ onBeforeUnmount(() => {
 
 defineExpose({
   show,
-  hide
+  hide,
 })
 </script>
 
@@ -60,5 +59,20 @@ defineExpose({
 .context-menu {
   position: fixed;
   z-index: 999;
+  border: 1px solid var(--el-menu-border-color);
+  border-radius: 5px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.context-menu-inner {
+  border-right: none;
+  border-radius: inherit;
+  padding: 4px;
+}
+
+.el-menu-item {
+  height: 34px;
+  border-radius: 5px;
+  font-size: 13px;
 }
 </style>
