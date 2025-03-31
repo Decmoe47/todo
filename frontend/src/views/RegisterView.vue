@@ -4,16 +4,20 @@
       <h1 style="text-align: center; margin: 20px 0">Register</h1>
     </div>
     <el-form ref="registerForm" :model="form" :rules="rules" style="max-width: 300px" @submit.prevent="handleSubmit">
+      <el-form-item prop="name">
+        <el-input v-model="form.name" placeholder="name" prefix-icon="user" />
+      </el-form-item>
+
       <el-form-item prop="email">
-        <el-input v-model="form.email" prefix-icon="user" />
+        <el-input v-model="form.email" placeholder="email" prefix-icon="user" />
       </el-form-item>
 
       <el-form-item prop="password">
-        <el-input v-model="form.password" type="password" prefix-icon="lock" />
+        <el-input v-model="form.password" placeholder="password" type="password" prefix-icon="lock" />
       </el-form-item>
 
       <el-form-item prop="verificationCode">
-        <el-input v-model="form.verificationCode" placeholder="Enter verification code" maxlength="4">
+        <el-input v-model="form.verificationCode" placeholder="verification code" maxlength="4">
           <template #append>
             <el-button @click="getVerificationCode" :disabled="verificationCodeSent">
               {{ verificationCodeSent ? `Retry after ${timer}` : 'Get Code' }}
@@ -43,13 +47,15 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user.ts'
+import type { RegisterForm } from '@/types/user.ts'
 
 const router = useRouter()
 const store = useUserStore()
 
 const timer = ref(0)
 const verificationCodeSent = ref(false)
-const form = reactive({
+const form = reactive<RegisterForm>({
+  name: '',
   email: '',
   password: '',
   verificationCode: '',
