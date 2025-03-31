@@ -25,6 +25,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepo;
     private final VerificationCodeService verificationCodeService;
+    private final TokenServiceImpl tokenService;
 
     public UserVO getUser(long userId) throws ErrorResponseException {
         User user = userRepo.findById(userId)
@@ -64,6 +65,17 @@ public class UserServiceImpl implements UserService {
         }
 
         userRepo.save(user);
+        return BeanUtil.toBean(user, UserVO.class);
+    }
+
+    @Override
+    public UserVO getUserByToken(String token) {
+        if (!tokenService.isValidated(token)) {
+            throw new ErrorResponseException(ErrorCodeEnum.ACCESS_TOKEN_EXPIRED);
+        }
+        User userPrincipal = (User) tokenService.parse(token).getPrincipal();
+        User user = userRepo.findById(userPrincipal.getId())
+                .orElseThrow(() -> new ErrorResponseException(ErrorCodeEnum.USER_NOT_FOUND));
         return BeanUtil.toBean(user, UserVO.class);
     }
 

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import axiosInstance from '@/libs/axios.ts'
 import type { AuthenticationTokens, LoginForm, RegisterForm, UserDTO } from '@/types/user.ts'
-import { clearToken, getRefreshToken, setAccessToken, setRefreshToken } from '@/utils/auth.ts'
+import { clearToken, getAccessToken, getRefreshToken, setAccessToken, setRefreshToken } from '@/utils/auth.ts'
 
 interface UserState {
   user?: UserDTO
@@ -41,6 +41,13 @@ export const useUserStore = defineStore('user', {
     async logout() {
       await axiosInstance.post('auth/logout')
       this.clearSessionAndCache()
+    },
+
+    async getUser() {
+      const userDTO = await axiosInstance.get<UserDTO, UserDTO>(
+        'users/by-token', { params: { token: getAccessToken() } })
+      this.user = userDTO
+      return userDTO
     },
 
     clearSessionAndCache() {

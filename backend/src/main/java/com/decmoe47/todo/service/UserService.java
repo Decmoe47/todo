@@ -14,4 +14,6 @@ public interface UserService extends UserDetailsService {
     List<UserVO> searchUser(UserSearchDTO searchUserDTO);
 
     UserVO updateUser(long userId, UserUpdateDTO userUpdateDTO);
+
+    UserVO getUserByToken(String token);
 }

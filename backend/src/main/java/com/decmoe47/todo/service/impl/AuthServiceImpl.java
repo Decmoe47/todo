@@ -84,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthenticationTokensVO refreshAccessToken(String refreshToken) {
         if (!tokenService.isValidated(refreshToken)) {
-
+            throw new ErrorResponseException(ErrorCodeEnum.REFRESH_TOKEN_EXPIRED);
         }
         return tokenService.refresh(refreshToken);
     }

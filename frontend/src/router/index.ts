@@ -1,6 +1,7 @@
 import { getAccessToken } from '@/utils/auth.ts'
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
+import { useUserStore } from '@/stores/user.ts'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -39,6 +40,11 @@ const authWhiteList = ['/login', '/register', '/logout']
 
 router.beforeEach(async (to, from, next) => {
   const isLogin = !!getAccessToken();
+  const userStore = useUserStore()
+
+  if (isLogin && !userStore.user) {
+    await userStore.getUser()
+  }
 
   if (isLogin) {
     // 已登录用户访问登录页时，重定向到首页

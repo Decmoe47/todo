@@ -24,6 +24,11 @@ public class UserController {
         return R.ok(userService.getUser(userId));
     }
 
+    @GetMapping("/by-token")
+    public R<UserVO> getUserByToken(@RequestParam String token) {
+        return R.ok(userService.getUserByToken(token));
+    }
+
     @GetMapping("/search")
     public R<List<UserVO>> searchUser(@RequestParam UserSearchDTO searchUserDTO) {
         return R.ok(userService.searchUser(searchUserDTO));
