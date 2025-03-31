@@ -14,7 +14,7 @@ public interface TodoService {
 
     TodoVO addTodo(TodoAddDTO todoAddDTO);
 
-    void deleteTodo(TodoDeleteDTO todoDeleteDTO);
+    void deleteTodos(List<TodoDeleteDTO> todoDeleteDTOs);
 
     List<TodoVO> updateTodos(List<TodoUpdateDTO> todoUpdateDTOS);
 

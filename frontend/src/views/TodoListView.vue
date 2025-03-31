@@ -56,7 +56,7 @@ const toggleTodo = async (id: number) => {
   todos.value = todos.value.map((todo) => (todo.id === id ? todoDTO : todo))
 }
 const deleteTodo = async (id: number) => {
-  await todoStore.deleteTodo(id)
+  await todoStore.deleteTodos([id])
   todos.value = todos.value.filter((todo) => todo.id !== id)
 }
 

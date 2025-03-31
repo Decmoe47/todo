@@ -30,8 +30,8 @@ public class TodoController {
     }
 
     @PostMapping("/delete")
-    public R<Object> deleteTodo(@RequestBody TodoDeleteDTO todoDeleteDTO) {
-        todoService.deleteTodo(todoDeleteDTO);
+    public R<Object> deleteTodo(@RequestBody List<TodoDeleteDTO> todoDeleteDTOs) {
+        todoService.deleteTodos(todoDeleteDTOs);
         return R.ok();
     }
 

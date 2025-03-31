@@ -62,11 +62,13 @@ public class TodoServiceImpl implements TodoService {
     }
 
     @Override
-    public void deleteTodo(TodoDeleteDTO todoDeleteDTO) {
-        if (Boolean.TRUE.equals(todoDeleteDTO.getSoftDeleted())) {
-            todoRepo.softDeleteById(todoDeleteDTO.getId());
-        } else {
-            todoRepo.deleteById(todoDeleteDTO.getId());
+    public void deleteTodos(List<TodoDeleteDTO> todoDeleteDTOs) {
+        for (TodoDeleteDTO todoDeleteDTO : todoDeleteDTOs) {
+            if (Boolean.TRUE.equals(todoDeleteDTO.getSoftDeleted())) {
+                todoRepo.softDeleteById(todoDeleteDTO.getId());
+            } else {
+                todoRepo.deleteById(todoDeleteDTO.getId());
+            }
         }
     }
 

@@ -42,11 +42,15 @@ export const useTodoStore = defineStore('todoList', {
     async updateTodos(todos: TodoUpdateDTO[]) {
       return await axiosInstance.post<TodoDTO[], TodoDTO[]>('todos/update', todos)
     },
-    async deleteTodo(todoId: number) {
-      await axiosInstance.post('todos/delete', {
-        id: todoId,
-        softDeleted: false,
+    async deleteTodos(todoIds: number[]) {
+      const data: { id: number, softDeleted: boolean }[] = []
+      todoIds.forEach((id) => {
+        data.push({
+          id: id,
+          softDeleted: false,
+        })
       })
+      await axiosInstance.post('todos/delete', data)
     },
     async toggleTodo(todoId: number) {
       return await axiosInstance.post<TodoDTO, TodoDTO>('todos/toggle', {
