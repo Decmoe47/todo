@@ -27,3 +27,5 @@ export interface TodoListDTO {
   name: string
   inbox: boolean
 }
+
+export type SidebarContextMenuOption = 'rename' | 'delete'

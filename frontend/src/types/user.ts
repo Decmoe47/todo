@@ -13,9 +13,11 @@ export interface UserDTO {
   id: number
   name: string
   email: string
-  isLocked: boolean
-  accountExpireTime: string
-  credentialExpireTime: string
-  lastLoginTime: string
-  registerTime: string
+
+  tokens: AuthenticationTokens
+}
+
+export interface AuthenticationTokens {
+  accessToken: string
+  refreshToken: string
 }

@@ -29,34 +29,11 @@ public class User extends BaseEntity implements UserDetails {
     private String password;
     private String name;
     private LocalDateTime lastLoginTime;
-    private boolean isLocked = false;
     private LocalDateTime registerTime = LocalDateTime.now();
-    private LocalDateTime accountExpireTime = null;
-    private LocalDateTime credentialExpireTime = LocalDateTime.now().plusDays(30);
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return !isLocked;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return credentialExpireTime != null && LocalDateTime.now().isBefore(credentialExpireTime);
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
     }
 
     @Override

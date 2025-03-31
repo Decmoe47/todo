@@ -52,13 +52,9 @@ const handleSubmit = async () => {
   if (!loginForm.email || !loginForm.password) {
     return
   }
-  try {
-    await store.login(loginForm)
-    ElMessage.success('Login successfully')
-    await router.replace('/')
-  } catch (err) {
-    console.error('Login error:', err)
-    ElMessage.error('Login failed! Please try again later.')
-  }
+
+  await store.login(loginForm)
+  ElMessage.success('Login successfully')
+  await router.replace('/')
 }
 </script>

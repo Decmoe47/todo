@@ -1,6 +1,6 @@
 package com.decmoe47.todo.config;
 
-import com.decmoe47.todo.constant.CommonConstants;
+import com.decmoe47.todo.constant.SecurityConstants;
 import com.decmoe47.todo.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(CommonConstants.AUTH_WHITELIST).permitAll()
+                        .requestMatchers(SecurityConstants.AUTH_WHITELIST.toArray(new String[0])).permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .rememberMe(Customizer.withDefaults());

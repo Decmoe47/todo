@@ -23,9 +23,9 @@ public enum ErrorCodeEnum {
     VERIFY_CODE_EXPIRED("验证码已失效，请重新发送！"),
     VERIFY_CODE_INCORRECT("验证码错误！"),
     PERMISSION_DENIED("您没有该操作的权限！"),
-
-    TEAM_NOT_FOUND("未找到该字幕组！"),
-    ROLES_NOT_FOUND("未设立任何职位"),
+    ACCESS_TOKEN_EXPIRED("登录已过期，请重新登录！"),
+    REFRESH_TOKEN_EXPIRED("登录已过期，请重新登录！"),
+    USERNAME_OR_PASSWORD_INCORRECT("用户名或密码错误！"),
 
     TODO_NOT_FOUND("任务不存在或已被删除！"),
     TODO_LIST_NOT_FOUND("不存在该清单");

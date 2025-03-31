@@ -1,25 +1,22 @@
 package com.decmoe47.todo.controller;
 
-import cn.hutool.jwt.JWT;
-import cn.hutool.jwt.JWTUtil;
-import com.decmoe47.todo.constant.JwtConstants;
-import com.decmoe47.todo.constant.enums.ErrorCodeEnum;
+import com.decmoe47.todo.model.dto.RefreshTokenDTO;
 import com.decmoe47.todo.model.dto.SendVerificationDTO;
 import com.decmoe47.todo.model.dto.UserLoginDTO;
 import com.decmoe47.todo.model.dto.UserRegisterDTO;
+import com.decmoe47.todo.model.vo.AuthenticationTokensVO;
 import com.decmoe47.todo.model.vo.R;
 import com.decmoe47.todo.model.vo.UserVO;
 import com.decmoe47.todo.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
@@ -28,27 +25,19 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Value("${base64Secret}")
-    private String base64Secret;
-
     @Operation(summary = "登录账号")
     @PostMapping("/login")
     public R<UserVO> login(@RequestBody UserLoginDTO userLoginDTO, HttpServletResponse response) {
         UserVO userVO = authService.login(userLoginDTO);
-
-        Map<String, Object> claims = HashMap.newHashMap(2);
-        claims.put(JwtConstants.USER_ID, userVO.getId());
-        claims.put("created", LocalDateTime.now());
-        String token = JWTUtil.createToken(claims, base64Secret.getBytes());
-
-        Cookie cookie = new Cookie(JwtConstants.TOKEN, token);
-        cookie.setHttpOnly(true);
-//        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(30 * 24 * 3600);
-        response.addCookie(cookie);
-
         return R.ok(userVO);
+    }
+
+    @Operation(summary = "注销")
+    @PostMapping("/logout")
+    public R<Object> logout(HttpServletRequest request) {
+        String token = request.getHeader(HttpHeaders.AUTHORIZATION);
+        authService.logout(token);
+        return R.ok();
     }
 
     @Operation(summary = "注册账号")
@@ -59,25 +48,15 @@ public class AuthController {
     }
 
     @Operation(summary = "发送验证码")
-    @PostMapping("/sendVerificationCode")
+    @PostMapping("/send-verification-code")
     public R<Object> sendVerifyCode(@RequestBody SendVerificationDTO sendVerificationDTO) {
         authService.sendVerifyCode(sendVerificationDTO.getEmail());
         return R.ok();
     }
 
-    @Operation(summary = "检查登录状态")
-    @GetMapping("/check")
-    public R<UserVO> checkAuth(@CookieValue(name = JwtConstants.TOKEN, required = false) String token) {
-        if (token == null) {
-            return R.error(ErrorCodeEnum.UNAUTHORIZED);
-        }
-
-        try {
-            JWT jwt = JWTUtil.parseToken(token);
-            long userId = ((Number) jwt.getPayload(JwtConstants.USER_ID)).longValue();
-            return R.ok(authService.getUser(userId));
-        } catch (Exception e) {
-            return R.error(ErrorCodeEnum.UNAUTHORIZED);
-        }
+    @Operation(summary = "刷新token")
+    @PostMapping("/refresh-token")
+    public R<AuthenticationTokensVO> refreshToken(@RequestBody RefreshTokenDTO refreshTokenDTO) {
+        return R.ok(authService.refreshAccessToken(refreshTokenDTO.getRefreshToken()));
     }
 }

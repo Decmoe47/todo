@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class MailTemplate {
+public final class MailTemplate {
 
     public static final String VERIFY_CODE_SUBJECT = "验证码";
 

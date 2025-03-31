@@ -1,8 +1,6 @@
+import { getAccessToken } from '@/utils/auth.ts'
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
-import axiosInstance from '@/libs/axios.ts'
-import { useUserStore } from '@/stores/user.ts'
-import type { UserDTO } from '@/types/user.ts'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -37,23 +35,26 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 })
+const authWhiteList = ['/login', '/register', '/logout']
 
 router.beforeEach(async (to, from, next) => {
-  const userStore = useUserStore()
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+  const isLogin = !!getAccessToken();
 
-  let isAuthenticated = false
-  try {
-    const user = await axiosInstance.get<UserDTO, UserDTO>('/auth/check')
-    isAuthenticated = true
-    userStore.setUser(user)
-  } catch {}
-
-  if (requiresAuth && !isAuthenticated) {
-    next('/login')
+  if (isLogin) {
+    // 已登录用户访问登录页时，重定向到首页
+    if (to.path === '/login') {
+      next('/');
+    } else {
+      next();
+    }
   } else {
-    next()
+    // 未登录用户访问非白名单路径时，跳转到登录页
+    if (authWhiteList.includes(to.path)) {
+      next();
+    } else {
+      next('/login');
+    }
   }
-})
+});
 
 export default router

@@ -4,8 +4,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class JwtConstants {
+public final class RedisConstants {
 
-    public static final String USER_ID = "userId";
-    public static final String EMAIL = "email";
+    public static final String BLACKLIST_TOKEN = "auth:token:blacklist:{}";
 }

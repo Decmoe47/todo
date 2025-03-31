@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -70,8 +69,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        User user = userRepo.findByEmail(email).orElseThrow();
-        user.setCredentialExpireTime(LocalDateTime.now().plusDays(30));
-        return user;
+        return userRepo.findByEmail(email).orElseThrow();
     }
 }

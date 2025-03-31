@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import axiosInstance from '@/libs/axios.ts'
-import type { LoginForm, RegisterForm, UserDTO } from '@/types/user.ts'
+import type { AuthenticationTokens, LoginForm, RegisterForm, UserDTO } from '@/types/user.ts'
+import { clearToken, getRefreshToken, setAccessToken, setRefreshToken } from '@/utils/auth.ts'
 
 interface UserState {
   user?: UserDTO
@@ -13,14 +14,40 @@ export const useUserStore = defineStore('user', {
     async login(form: LoginForm) {
       const user = await axiosInstance.post<UserDTO, UserDTO>('auth/login', form)
       this.user = user
+
+      setAccessToken(user.tokens.accessToken)
+      setRefreshToken(user.tokens.refreshToken)
+
       return user
     },
+
     async register(form: RegisterForm) {
       return await axiosInstance.post<UserDTO, UserDTO>('auth/register', form)
     },
-    async sendVerificationCode(email: string) {
-      return await axiosInstance.post<void, void>('auth/sendVerificationCode', { email: email })
+
+    async refreshToken() {
+      const refreshToken = getRefreshToken()
+      const tokens = await axiosInstance.post<AuthenticationTokens, AuthenticationTokens>(
+        'auth/refresh-token', { refreshToken: refreshToken })
+
+      setAccessToken(tokens.accessToken)
+      setRefreshToken(tokens.refreshToken)
     },
+
+    async sendVerificationCode(email: string) {
+      return await axiosInstance.post<void, void>('auth/send-verification-code', { email: email })
+    },
+
+    async logout() {
+      await axiosInstance.post('auth/logout')
+      this.clearSessionAndCache()
+    },
+
+    clearSessionAndCache() {
+      clearToken()
+      this.user = undefined
+    },
+
     setUser(user: UserDTO) {
       this.user = user
     },
