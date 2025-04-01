@@ -5,18 +5,9 @@
 
       <el-divider style="margin: 10px auto" />
 
-      <div style="padding: 10px 10px 5px 10px; margin-bottom: 10px">
-        <el-button type="primary" @click="showNewListInput" icon="Plus"> New List </el-button>
-        <el-input
-          ref="newListNameInput"
-          v-show="newListNameInputShown"
-          v-model="newListName"
-          placeholder="Enter list name"
-          @keyup.enter="createNewList"
-          @blur="hideNewListInput"
-          style="margin-top: 5px"
-        />
-      </div>
+      <el-button type="primary" @click="createListModalVisible = true" icon="Plus" class="new-list-button">
+        New List
+      </el-button>
 
       <el-menu-item
         v-for="list in todoStore.customTodoLists"
@@ -49,6 +40,15 @@
 
     <ContextMenuComp ref="contextMenuRef" @menu-click="handleMenuClick" :menu-items="menuItems" />
 
+    <!-- 新建对话框 -->
+    <el-dialog title="Create todo list" v-model="createListModalVisible" width="30%">
+      <el-input v-model="newListName" placeholder="Enter a name"></el-input>
+      <template #footer>
+        <el-button @click="createListModalVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="confirmCreate">OK</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 重命名对话框 -->
     <el-dialog title="Rename todo list" v-model="renameModalVisible" width="30%">
       <el-input v-model="renameListNewName" placeholder="Enter new name"></el-input>
@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watchEffect } from 'vue'
+import { ref, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useTodoStore } from '@/stores/todo.ts'
@@ -73,11 +73,10 @@ const router = useRouter()
 const userStore = useUserStore()
 const todoStore = useTodoStore()
 
-const newListNameInputShown = ref(false)
-const newListName = ref('')
-const newListNameInput = ref()
 const contextMenuRef = ref()
 const rightClickedListId = ref('')
+const createListModalVisible = ref(false) // 控制新建列表对话框显示
+const newListName = ref('')
 const renameModalVisible = ref(false) // 控制重命名对话框显示
 const renameListNewName = ref('') // 存储新的名称
 
@@ -113,22 +112,11 @@ const confirmRename = async () => {
   }
 }
 
-const showNewListInput = async () => {
-  newListNameInputShown.value = true
-  await nextTick()
-  newListNameInput.value.focus()
-}
-
-const hideNewListInput = () => {
-  newListNameInputShown.value = false
-  newListName.value = ''
-}
-
-const createNewList = async () => {
+const confirmCreate = async () => {
   if (newListName.value) {
     await todoStore.addList(newListName.value)
     newListName.value = ''
-    newListNameInputShown.value = false
+    createListModalVisible.value = false
   }
 }
 
@@ -181,6 +169,10 @@ watchEffect(async () => {
 
 .active-item {
   background-color: #e6f7ff !important;
+}
+
+.new-list-button {
+  margin: 5px 10px 10px 10px;
 }
 
 .user-info-menu {
