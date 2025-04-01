@@ -50,7 +50,7 @@
     <ContextMenuComp ref="contextMenuRef" @menu-click="handleMenuClick" :menu-items="menuItems" />
 
     <!-- 重命名对话框 -->
-    <el-dialog title="Rename todo list" v-model:visible="renameModalVisible" width="30%">
+    <el-dialog title="Rename todo list" v-model="renameModalVisible" width="30%">
       <el-input v-model="renameListNewName" placeholder="Enter new name"></el-input>
       <template #footer>
         <el-button @click="renameModalVisible = false">Cancel</el-button>

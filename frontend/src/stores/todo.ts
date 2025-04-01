@@ -33,8 +33,8 @@ export const useTodoStore = defineStore('todoList', {
 
     async updateListName(listId: string, name: string) {
       const list = await axiosInstance.post<TodoListDTO, TodoListDTO>('todoLists/update', {
-        id: name,
-        name: this.getListName(listId),
+        id: listId,
+        name: name,
       })
       const index = this.customTodoLists.findIndex((t) => t.id === listId)
       if (index !== -1) {
