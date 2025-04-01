@@ -1,4 +1,4 @@
 export interface MenuItem {
-  name: string
+  label: string
   action: () => Promise<void>
 }

@@ -9,7 +9,7 @@
   >
     <el-menu class="context-menu-inner">
       <el-menu-item v-for="(item, key) in menuItems" :key="key" @click="() => handleMenuClick(item)" :index="key">
-        {{ item.name }}
+        {{ item.label }}
       </el-menu-item>
     </el-menu>
   </div>
@@ -24,14 +24,13 @@ defineProps<{
     [key: string]: MenuItem
   }
 }>()
-const emits = defineEmits<{ (event: 'menuClick', menuItem: MenuItem): void }>()
 
 const visible = ref(false)
 const x = ref(0)
 const y = ref(0)
 
-const handleMenuClick = (menuItem: MenuItem) => {
-  emits('menuClick', menuItem)
+const handleMenuClick = async (menuItem: MenuItem) => {
+  await menuItem.action()
   hide()
 }
 const show = (e: MouseEvent) => {

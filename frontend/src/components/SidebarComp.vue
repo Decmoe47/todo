@@ -38,7 +38,8 @@
       </el-dropdown>
     </div>
 
-    <ContextMenuComp ref="contextMenuRef" @menu-click="handleMenuClick" :menu-items="menuItems" />
+    <!-- 右键菜单 -->
+    <ContextMenuComp ref="contextMenuRef" :menu-items="menuItems" />
 
     <!-- 新建对话框 -->
     <el-dialog title="Create todo list" v-model="createListModalVisible" width="30%">
@@ -66,14 +67,13 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useTodoStore } from '@/stores/todo.ts'
 import ContextMenuComp from '@/components/ContextMenuComp.vue'
-import { ElMessage } from 'element-plus'
 import type { MenuItem } from '@/types/menu.ts'
 
 const router = useRouter()
 const userStore = useUserStore()
 const todoStore = useTodoStore()
 
-const contextMenuRef = ref()
+const contextMenuRef = ref<InstanceType<typeof ContextMenuComp>>()
 const rightClickedListId = ref('')
 const createListModalVisible = ref(false) // 控制新建列表对话框显示
 const newListName = ref('')
@@ -82,7 +82,7 @@ const renameListNewName = ref('') // 存储新的名称
 
 const menuItems: { [key: string]: MenuItem } = {
   rename: {
-    name: 'Rename',
+    label: 'Rename',
     action: async () => {
       renameListNewName.value =
         todoStore.customTodoLists.find((list) => list.id === rightClickedListId.value)?.name || ''
@@ -90,18 +90,16 @@ const menuItems: { [key: string]: MenuItem } = {
     },
   },
   delete: {
-    name: 'Delete',
+    label: 'Delete',
     action: async () => {
       await todoStore.deleteList(rightClickedListId.value)
       await router.push('/p/inbox')
-      ElMessage.success('List deleted successfully')
     },
   },
 }
-const handleMenuClick = async (menuItem: MenuItem) => await menuItem.action()
 
 const onContextMenu = (e: MouseEvent, listId: string) => {
-  contextMenuRef.value.show(e)
+  contextMenuRef.value!.show(e)
   rightClickedListId.value = listId
 }
 
@@ -154,7 +152,7 @@ watchEffect(async () => {
 .sidebar-menu {
   flex: 1;
   overflow: auto;
-  padding: 10px 10px;
+  padding: 20px 10px 10px 10px;
   min-height: 0;
 }
 
