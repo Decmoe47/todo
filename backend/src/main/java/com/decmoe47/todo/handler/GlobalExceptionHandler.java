@@ -16,7 +16,11 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(ErrorResponseException.class)
     public R<Object> handleErrorResponseException(ErrorResponseException e) {
-        log.error("{}\n{}", e.getMessage(), ExceptionUtils.getStackTrace(e));
+        Throwable rootCause = ExceptionUtils.getRootCause(e);
+        if (rootCause == null) {
+            rootCause = e;
+        }
+        log.error("{}\n{}", rootCause.getMessage(), ExceptionUtils.getStackTrace(rootCause));
         if (e.getData() != null) {
             return R.error(e.getErrorCode(), e.getData());
         } else {
@@ -27,7 +31,11 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(Throwable.class)
     public R<Object> handleException(Throwable e) {
-        log.error("{}\n{}", e.getMessage(), ExceptionUtils.getStackTrace(e));
+        Throwable rootCause = ExceptionUtils.getRootCause(e);
+        if (rootCause == null) {
+            rootCause = e;
+        }
+        log.error("{}\n{}", rootCause.getMessage(), ExceptionUtils.getStackTrace(rootCause));
         return R.error(ErrorCodeEnum.INTERNAL_SERVER_ERROR);
     }
 }
