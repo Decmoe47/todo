@@ -1,10 +1,10 @@
 <template>
   <el-container style="height: 100vh">
-    <el-aside width="200px">
-      <SidebarComp />
+    <el-aside class="todo-list-sidebar">
+      <TodoListSidebar />
     </el-aside>
     <el-container>
-      <el-main>
+      <el-main style="padding: 0">
         <router-view v-slot="{ Component }">
           <component :is="Component" />
         </router-view>
@@ -14,5 +14,12 @@
 </template>
 
 <script setup lang="ts">
-import SidebarComp from '@/components/SidebarComp.vue'
+import TodoListSidebar from '@/components/TodoListSidebar.vue'
 </script>
+
+<style scoped>
+.todo-list-sidebar {
+  width: 250px;
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
+}
+</style>

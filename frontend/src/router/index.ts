@@ -12,7 +12,7 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: '/p/:listId',
         name: 'Todos',
-        component: () => import('@/views/TodoListView.vue'),
+        component: () => import('@/views/TodoView.vue'),
         beforeEnter: (to) => {
           if (!to.params.listId) {
             return { path: '/p/inbox', replace: true }

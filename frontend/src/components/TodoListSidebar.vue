@@ -39,7 +39,7 @@
     </div>
 
     <!-- 右键菜单 -->
-    <ContextMenuComp ref="contextMenuRef" :menu-items="menuItems" />
+    <ContextMenu ref="contextMenuRef" :menu-items="menuItems" />
 
     <!-- 新建对话框 -->
     <el-dialog title="Create todo list" v-model="createListModalVisible" width="30%">
@@ -66,14 +66,14 @@ import { ref, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useTodoStore } from '@/stores/todo.ts'
-import ContextMenuComp from '@/components/ContextMenuComp.vue'
+import ContextMenu from '@/components/ContextMenu.vue'
 import type { MenuItem } from '@/types/menu.ts'
 
 const router = useRouter()
 const userStore = useUserStore()
 const todoStore = useTodoStore()
 
-const contextMenuRef = ref<InstanceType<typeof ContextMenuComp>>()
+const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
 const rightClickedListId = ref('')
 const createListModalVisible = ref(false) // 控制新建列表对话框显示
 const newListName = ref('')
@@ -147,6 +147,7 @@ watchEffect(async () => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: -5px 0 1px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-menu {
@@ -154,6 +155,7 @@ watchEffect(async () => {
   overflow: auto;
   padding: 20px 10px 10px 10px;
   min-height: 0;
+  border-right: none;
 }
 
 .el-menu-item {
@@ -175,7 +177,6 @@ watchEffect(async () => {
 
 .user-info-menu {
   padding: 10px 10px;
-  border-right: 1px solid var(--el-menu-border-color);
   flex-shrink: 0;
 }
 
