@@ -26,6 +26,7 @@ public enum ErrorCodeEnum {
     ACCESS_TOKEN_EXPIRED("登录已过期，请重新登录！"),
     REFRESH_TOKEN_EXPIRED("登录已过期，请重新登录！"),
     USERNAME_OR_PASSWORD_INCORRECT("用户名或密码错误！"),
+    ACCESS_DENIED("访问被拒绝！"),
 
     TODO_NOT_FOUND("任务不存在或已被删除！"),
     TODO_LIST_NOT_FOUND("不存在该清单");

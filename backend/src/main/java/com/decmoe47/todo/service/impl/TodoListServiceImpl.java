@@ -14,6 +14,8 @@ import com.decmoe47.todo.repository.UserRepository;
 import com.decmoe47.todo.service.TodoListService;
 import com.decmoe47.todo.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,9 +26,11 @@ public class TodoListServiceImpl implements TodoListService {
 
     private final TodoListRepository todoListRepo;
     private final UserRepository userRepo;
+    private final CacheManager cacheManager;
 
     @Override
-    public List<TodoListVO> getCustomTodoLists(long userId) {
+    public List<TodoListVO> getCustomTodoLists() {
+        long userId = SecurityUtil.getCurrentUserId();
         List<TodoList> lists = todoListRepo.findByCreatedByIdAndInboxFalse(userId);
         return BeanUtil.copyToList(lists, TodoListVO.class);
     }
@@ -53,5 +57,13 @@ public class TodoListServiceImpl implements TodoListService {
     @Override
     public void deleteTodoList(TodoListDeleteDTO todoListDeleteDTO) {
         todoListRepo.deleteById(todoListDeleteDTO.getId());
+        clearCache(todoListDeleteDTO.getId());
+    }
+
+    private void clearCache(String todoListId) {
+        Cache todoListAccess = cacheManager.getCache("todoListAccess");
+        if (todoListAccess != null) {
+            todoListAccess.evict(SecurityUtil.getCurrentUserId() + "_" + todoListId);
+        }
     }
 }

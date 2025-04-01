@@ -124,7 +124,7 @@ watchEffect(async () => {
     } else {
       listName.value = todoStore.getListName(listId.value)
     }
-    todos.value = await todoStore.getTodos(userStore.userId, listId.value)
+    todos.value = await todoStore.getTodos(listId.value)
   }
 })
 

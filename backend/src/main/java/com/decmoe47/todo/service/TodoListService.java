@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface TodoListService {
 
-    List<TodoListVO> getCustomTodoLists(long userId);
+    List<TodoListVO> getCustomTodoLists();
 
     TodoListVO addTodoList(TodoListAddDTO todoListAddDTO);
 

@@ -134,8 +134,8 @@ const handleCommand = (command: string) => {
 }
 
 watchEffect(async () => {
-  if (userStore.userId && todoStore.customTodoLists.length === 0) {
-    await todoStore.getCustomLists(userStore.userId)
+  if (todoStore.customTodoLists.length === 0) {
+    await todoStore.getCustomLists()
   }
 })
 </script>

@@ -20,6 +20,8 @@ import com.decmoe47.todo.service.InboxCacheService;
 import com.decmoe47.todo.service.TodoService;
 import com.decmoe47.todo.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -33,9 +35,11 @@ public class TodoServiceImpl implements TodoService {
     private final TodoListRepository todoListRepo;
     private final UserRepository userRepo;
     private final InboxCacheService inboxCacheService;
+    private final CacheManager cacheManager;
 
     @Override
-    public List<TodoVO> getTodos(long userId, String listId) {
+    public List<TodoVO> getTodos(String listId) {
+        long userId = SecurityUtil.getCurrentUserId();
         List<Todo> todos;
         if (TodoConstants.INBOX.equals(listId)) {
             listId = inboxCacheService.getInboxId(userId);
@@ -70,6 +74,7 @@ public class TodoServiceImpl implements TodoService {
             } else {
                 todoRepo.deleteById(todoDeleteDTO.getId());
             }
+            cleaCache(todoDeleteDTO.getId());
         }
     }
 
@@ -98,5 +103,12 @@ public class TodoServiceImpl implements TodoService {
         todo.setDone(!todo.isDone());
         todo = todoRepo.save(todo);
         return BeanUtil.toBean(todo, TodoVO.class);
+    }
+
+    private void cleaCache(long todoId) {
+        Cache todoAccess = cacheManager.getCache("todoAccess");
+        if (todoAccess != null) {
+            todoAccess.evict(SecurityUtil.getCurrentUserId() + "_" + todoId);
+        }
     }
 }

@@ -13,10 +13,8 @@ export const useTodoStore = defineStore('todoList', {
 
   actions: {
     /////// todo list ///////
-    async getCustomLists(userId: number) {
-      this.customTodoLists = await axiosInstance.get<TodoListDTO[], TodoListDTO[]>('todoLists/custom', {
-        params: { userId: userId },
-      })
+    async getCustomLists() {
+      this.customTodoLists = await axiosInstance.get<TodoListDTO[], TodoListDTO[]>('todoLists/custom')
     },
 
     getListName(listId: string) {
@@ -52,10 +50,9 @@ export const useTodoStore = defineStore('todoList', {
     },
 
     /////// todo ///////
-    async getTodos(userId: number, listId: string) {
+    async getTodos(listId: string) {
       return await axiosInstance.get<TodoDTO[], TodoDTO[]>('todos', {
         params: {
-          userId: userId,
           listId: listId,
         },
       })
