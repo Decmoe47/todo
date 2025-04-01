@@ -20,6 +20,7 @@ public class Todo extends Auditable<User> {
     private String content;
     private LocalDateTime dueDate;
     private boolean done = false;
+    private String description;
 
     @ManyToOne
     @JoinColumn(name = "belonged_list_id")

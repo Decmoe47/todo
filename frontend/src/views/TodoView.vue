@@ -40,14 +40,20 @@
     </div>
 
     <!-- 侧边栏 -->
-    <TodoDetailSidebar v-if="isSidebarOpen" :todo="selectedTodo" @close="closeSidebar" />
+    <TodoDetailSidebar
+      v-if="isSidebarOpen"
+      :todo="selectedTodo"
+      @close="closeSidebar"
+      @toggleTodo="toggleTodo"
+      @updateTodo="updateTodo"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useTodoStore } from '@/stores/todo.ts'
 import { useUserStore } from '@/stores/user.ts'
-import type { TodoDTO } from '@/types/todo.ts'
+import type { BaseTodoDTO, TodoDTO } from '@/types/todo.ts'
 import { computed, ref, watch, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import ContextMenu from '@/components/ContextMenu.vue'
@@ -95,6 +101,12 @@ const toggleTodo = async (id: number) => {
   todos.value = todos.value.map((todo) => (todo.id === id ? todoDTO : todo))
 }
 
+const updateTodo = async (todo: BaseTodoDTO) => {
+  const newTodos = await todoStore.updateTodos([todo])
+  if (!newTodos) return
+  todos.value = todos.value.map((t) => (t.id === newTodos[0].id ? newTodos[0] : t))
+}
+
 // 点击 todo 打开侧边栏
 const openDetail = (todo: TodoDTO) => {
   selectedTodo.value = todo
@@ -126,6 +138,7 @@ watch(listId, () => {
 .page-container {
   display: flex;
   height: 100vh;
+  background-color: #faf9f8;
 }
 .main-content {
   flex: 1;

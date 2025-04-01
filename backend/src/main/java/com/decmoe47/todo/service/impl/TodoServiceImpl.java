@@ -1,6 +1,7 @@
 package com.decmoe47.todo.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.ListUtil;
 import com.decmoe47.todo.constant.TodoConstants;
 import com.decmoe47.todo.constant.enums.ErrorCodeEnum;
 import com.decmoe47.todo.exception.ErrorResponseException;
@@ -81,8 +82,13 @@ public class TodoServiceImpl implements TodoService {
             BeanUtil.copyProperties(todoUpdateDTO, todo);
             todosToSave.add(todo);
         }
-        todoRepo.saveAll(todosToSave);
-        return BeanUtil.copyToList(todosToSave, TodoVO.class);
+
+        if (!todosToSave.isEmpty()) {
+            todoRepo.saveAll(todosToSave);
+            return BeanUtil.copyToList(todosToSave, TodoVO.class);
+        } else {
+            return ListUtil.empty();
+        }
     }
 
     @Override

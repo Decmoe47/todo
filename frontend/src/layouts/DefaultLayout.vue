@@ -20,6 +20,6 @@ import TodoListSidebar from '@/components/TodoListSidebar.vue'
 <style scoped>
 .todo-list-sidebar {
   width: 250px;
-  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 3px 0 3px rgba(0, 0, 0, 0.1);
 }
 </style>

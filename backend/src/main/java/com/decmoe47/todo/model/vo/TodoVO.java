@@ -11,6 +11,7 @@ public class TodoVO {
     private String content;
     private LocalDateTime dueDate;
     private boolean done;
+    private String description;
     private TodoListVO belongedList;
 
     private UserVO createdBy;
