@@ -17,6 +17,28 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ResponseBody
+    @ExceptionHandler(Throwable.class)
+    public R<Object> handleException(HttpServletRequest request, Throwable e) {
+        Throwable rootCause = ExceptionUtils.getRootCause(e);
+        if (rootCause == null) {
+            rootCause = e;
+        }
+
+        switch (rootCause) {
+            case ErrorResponseException errorResponseException -> {
+                return handleErrorResponseException(errorResponseException);
+            }
+            case AuthorizationDeniedException authorizationDeniedException -> {
+                return handleAuthorizationDeniedException(request, authorizationDeniedException);
+            }
+            default -> {
+                log.error("{}\n{}", rootCause.getMessage(), ExceptionUtils.getStackTrace(rootCause));
+                return R.error(ErrorCodeEnum.INTERNAL_SERVER_ERROR);
+            }
+        }
+    }
+
+    @ResponseBody
     @ExceptionHandler(ErrorResponseException.class)
     public R<Object> handleErrorResponseException(ErrorResponseException e) {
         Throwable rootCause = ExceptionUtils.getRootCause(e);
@@ -29,17 +51,6 @@ public class GlobalExceptionHandler {
         } else {
             return R.error(e.getErrorCode());
         }
-    }
-
-    @ResponseBody
-    @ExceptionHandler(Throwable.class)
-    public R<Object> handleException(Throwable e) {
-        Throwable rootCause = ExceptionUtils.getRootCause(e);
-        if (rootCause == null) {
-            rootCause = e;
-        }
-        log.error("{}\n{}", rootCause.getMessage(), ExceptionUtils.getStackTrace(rootCause));
-        return R.error(ErrorCodeEnum.INTERNAL_SERVER_ERROR);
     }
 
     @ResponseBody
