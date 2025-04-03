@@ -36,7 +36,7 @@ export const useUserStore = defineStore('user', {
     },
 
     async sendVerificationCode(email: string) {
-      return await axiosInstance.post<void, void>('auth/send-verification-code', { email: email })
+      return await axiosInstance.post<void, void>('auth/send-verify-code', { email: email })
     },
 
     async logout() {

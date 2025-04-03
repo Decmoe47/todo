@@ -12,10 +12,10 @@ import org.springframework.validation.annotation.Validated;
 public class SecurityProperties {
 
     @Min(-1)
-    private Integer accessTokenTimeToLive = 3600;
+    private Integer accessTokenTtl;
 
     @Min(-1)
-    private Integer refreshTokenTimeToLive = 604800;
+    private Integer refreshTokenTtl;
 
     @NotNull
     private String secretKey;

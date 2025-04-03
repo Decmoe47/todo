@@ -81,6 +81,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDetails loadUserByUsername(String email) {
-        return userRepo.findByEmail(email).orElseThrow();
+        return userRepo.findByEmail(email).orElseThrow(() -> new ErrorResponseException(ErrorCodeEnum.USER_NOT_FOUND));
     }
 }

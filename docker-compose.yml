@@ -1,0 +1,51 @@
+networks:
+  my-network:
+    driver: bridge
+
+services:
+  springboot-app:
+    image: todo-backend:latest
+    container_name: springboot-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql-db
+      - redis-cache
+    networks:
+      - my-network
+
+  vue-app:
+    image: todo-frontend:latest
+    container_name: vue-app
+    ports:
+      - "5173:80"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - my-network
+
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: todo
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - my-network
+
+  redis-cache:
+    image: redis:latest
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    networks:
+      - my-network
+
+volumes:
+  mysql-data:

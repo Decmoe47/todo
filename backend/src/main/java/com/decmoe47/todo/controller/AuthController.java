@@ -48,7 +48,7 @@ public class AuthController {
     }
 
     @Operation(summary = "发送验证码")
-    @PostMapping("/send-verification-code")
+    @PostMapping("/send-verify-code")
     public R<Object> sendVerifyCode(@RequestBody SendVerificationDTO sendVerificationDTO) {
         authService.sendVerifyCode(sendVerificationDTO.getEmail());
         return R.ok();

@@ -14,6 +14,7 @@ import com.decmoe47.todo.constant.RedisConstants;
 import com.decmoe47.todo.model.entity.User;
 import com.decmoe47.todo.model.vo.AuthenticationTokensVO;
 import com.decmoe47.todo.service.TokenService;
+import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,13 +31,15 @@ import java.util.concurrent.TimeUnit;
 public class TokenServiceImpl implements TokenService {
 
     private final SecurityProperties securityProperties;
-    private final RedisTemplate<String, Object> redisTemplate;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public AuthenticationTokensVO generate(Authentication authentication) {
         User user = (User) authentication.getPrincipal();
-        String accessToken = generateToken(user, securityProperties.getAccessTokenTimeToLive());
-        String refreshToken = generateToken(user, securityProperties.getRefreshTokenTimeToLive());
+        String accessToken = generateToken(user, securityProperties.getAccessTokenTtl());
+        String refreshToken = generateToken(user, securityProperties.getRefreshTokenTtl());
 
         return new AuthenticationTokensVO()
                 .setAccessToken(accessToken)
@@ -73,7 +76,7 @@ public class TokenServiceImpl implements TokenService {
         String email = payloads.getStr(JwtConstants.EMAIL);
 
         User user = new User().setId(userId).setEmail(email);
-        String accessToken = generateToken(user, securityProperties.getAccessTokenTimeToLive());
+        String accessToken = generateToken(user, securityProperties.getAccessTokenTtl());
 
         return new AuthenticationTokensVO()
                 .setAccessToken(accessToken)

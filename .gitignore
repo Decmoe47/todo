@@ -75,3 +75,4 @@ log/
 # Config files
 *.yml
 *.yaml
+!docker-compose.yml
