@@ -3,13 +3,20 @@
     <div>
       <h1 style="text-align: center; margin: 20px 0">Login</h1>
     </div>
-    <el-form :model="form" :rules="rules" ref="loginForm" style="max-width: 300px" @submit.prevent="handleSubmit">
+    <el-form
+      :model="form"
+      :rules="rules"
+      ref="loginForm"
+      style="max-width: 300px"
+      @submit.prevent="handleSubmit"
+      :inline-message="true"
+    >
       <el-form-item prop="email">
-        <el-input v-model="form.email" prefix-icon="user" />
+        <el-input v-model="form.email" placeholder="email" prefix-icon="user" />
       </el-form-item>
 
       <el-form-item prop="password">
-        <el-input type="password" v-model="form.password" prefix-icon="lock" />
+        <el-input type="password" v-model="form.password" placeholder="password" prefix-icon="lock" />
       </el-form-item>
 
       <el-form-item>
@@ -58,3 +65,9 @@ const handleSubmit = async () => {
   await router.replace('/')
 }
 </script>
+
+<style scoped>
+:deep(.el-form-item) {
+  margin-bottom: 10px;
+}
+</style>
