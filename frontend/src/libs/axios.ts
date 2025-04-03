@@ -38,6 +38,8 @@ axiosInstance.interceptors.response.use(
     } else if (response.data.code === ResultEnums.REFRESH_TOKEN_EXPIRED) {
       // refresh token 过期，需要重新登录
       await handleSessionExpired()
+    } else if (response.data.code === ResultEnums.USER_NOT_FOUND) {
+      await router.push('/login')
     } else {
       ElMessage.error(response.data.message)
       console.error(JSON.stringify(response.data))
