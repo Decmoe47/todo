@@ -19,6 +19,7 @@ import com.decmoe47.todo.repository.UserRepository;
 import com.decmoe47.todo.service.InboxCacheService;
 import com.decmoe47.todo.service.TodoService;
 import com.decmoe47.todo.util.SecurityUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -66,6 +67,7 @@ public class TodoServiceImpl implements TodoService {
         return BeanUtil.toBean(todo, TodoVO.class);
     }
 
+    @Transactional
     @Override
     public void deleteTodos(List<TodoDeleteDTO> todoDeleteDTOs) {
         for (TodoDeleteDTO todoDeleteDTO : todoDeleteDTOs) {

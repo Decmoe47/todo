@@ -116,16 +116,15 @@ const openDetail = (todo: TodoDTO) => {
 const closeSidebar = () => (isSidebarOpen.value = false)
 
 watchEffect(async () => {
-  if (todoStore.customTodoLists.length === 0) return
+  if (!userStore.userId) return
 
-  if (userStore.userId) {
-    if (listId.value === 'inbox') {
-      listName.value = 'Inbox'
-    } else {
-      listName.value = todoStore.getListName(listId.value)
-    }
-    todos.value = await todoStore.getTodos(listId.value)
+  if (listId.value === 'inbox') {
+    listName.value = 'Inbox'
+  } else {
+    listName.value = todoStore.getListName(listId.value)
   }
+
+  todos.value = await todoStore.getTodos(listId.value)
 })
 
 watch(listId, () => {
