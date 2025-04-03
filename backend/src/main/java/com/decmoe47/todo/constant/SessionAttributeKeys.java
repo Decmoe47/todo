@@ -6,6 +6,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SessionAttributeKeys {
 
-    public static final String VERIFICATION_CODE = "verificationCode";
-    public static final String VERIFICATION_CODE_EXPIRE_TIME = "verificationCodeExpireTime";
+    public static final String VERIFY_CODE = "verifyCode";
+    public static final String VERIFY_CODE_EXPIRE_TIME = "verifyCodeExpireTime";
 }

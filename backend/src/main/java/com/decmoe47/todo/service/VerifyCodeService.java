@@ -2,7 +2,7 @@ package com.decmoe47.todo.service;
 
 import org.jetbrains.annotations.Nullable;
 
-public interface VerificationCodeService {
+public interface VerifyCodeService {
 
     String createCode();
 

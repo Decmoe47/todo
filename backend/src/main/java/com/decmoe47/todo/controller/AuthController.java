@@ -1,7 +1,7 @@
 package com.decmoe47.todo.controller;
 
 import com.decmoe47.todo.model.dto.RefreshTokenDTO;
-import com.decmoe47.todo.model.dto.SendVerificationDTO;
+import com.decmoe47.todo.model.dto.SendVerifyCodeDTO;
 import com.decmoe47.todo.model.dto.UserLoginDTO;
 import com.decmoe47.todo.model.dto.UserRegisterDTO;
 import com.decmoe47.todo.model.vo.AuthenticationTokensVO;
@@ -49,8 +49,8 @@ public class AuthController {
 
     @Operation(summary = "发送验证码")
     @PostMapping("/send-verify-code")
-    public R<Object> sendVerifyCode(@RequestBody SendVerificationDTO sendVerificationDTO) {
-        authService.sendVerifyCode(sendVerificationDTO.getEmail());
+    public R<Object> sendVerifyCode(@RequestBody SendVerifyCodeDTO sendVerifyCodeDTO) {
+        authService.sendVerifyCode(sendVerifyCodeDTO.getEmail());
         return R.ok();
     }
 

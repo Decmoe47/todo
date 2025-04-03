@@ -16,7 +16,7 @@ import com.decmoe47.todo.repository.UserRepository;
 import com.decmoe47.todo.service.AuthService;
 import com.decmoe47.todo.service.MailService;
 import com.decmoe47.todo.service.TokenService;
-import com.decmoe47.todo.service.VerificationCodeService;
+import com.decmoe47.todo.service.VerifyCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -37,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
     private final TokenService tokenService;
     private final UserRepository userRepo;
     private final TodoListRepository todoListRepo;
-    private final VerificationCodeService verificationCodeService;
+    private final VerifyCodeService verifyCodeService;
     private final AuthenticationManager authenticationManager;
 
     @Transactional(rollbackFor = Exception.class)
@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         if (userRepo.findByEmail(userRegisterDTO.getEmail()).isPresent())
             throw new ErrorResponseException(ErrorCodeEnum.USER_ALREADY_EXISTS);
 
-        verificationCodeService.checkCode(userRegisterDTO.getVerificationCode());
+        verifyCodeService.checkCode(userRegisterDTO.getVerificationCode());
 
         User user = BeanUtil.toBean(userRegisterDTO, User.class);
         user = saveNewUser(user);
@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     public void sendVerifyCode(String email) {
-        String code = verificationCodeService.createCode();
+        String code = verifyCodeService.createCode();
         List<String> toList = List.of(email);
         boolean sent = mailService.send(
                 toList, MailTemplate.VERIFY_CODE_SUBJECT, MailTemplate.VERIFY_CODE_BODY.replace("{code}", code));
