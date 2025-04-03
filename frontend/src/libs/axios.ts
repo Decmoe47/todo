@@ -30,19 +30,23 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   async (response) => {
-    if (response.data.code === 0) {
-      return response.data.data
-    } else if (response.data.code === ResultEnums.ACCESS_TOKEN_EXPIRED) {
-      // token 过期，尝试刷新
-      await handleTokenRefresh()
-    } else if (response.data.code === ResultEnums.REFRESH_TOKEN_EXPIRED) {
-      // refresh token 过期，需要重新登录
-      await handleSessionExpired()
-    } else if (response.data.code === ResultEnums.USER_NOT_FOUND) {
-      await router.push('/login')
-    } else {
-      ElMessage.error(response.data.message)
-      console.error(JSON.stringify(response.data))
+    switch (response.data.code as number) {
+      case ResultEnums.SUCCESS:
+        return response.data.data
+      case ResultEnums.ACCESS_TOKEN_EXPIRED:
+        // token 过期，尝试刷新
+        await handleTokenRefresh()
+        break
+      case ResultEnums.REFRESH_TOKEN_EXPIRED:
+        // refresh token 过期，需要重新登录
+        await handleSessionExpired()
+        break
+      case ResultEnums.USER_NOT_FOUND:
+        await router.push('/login')
+        break
+      default:
+        ElMessage.error(response.data.message)
+        console.error(JSON.stringify(response.data))
     }
 
     return Promise.reject(new Error(`${response.data.code}: ${response.data.message}`))
