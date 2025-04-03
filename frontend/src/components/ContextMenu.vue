@@ -34,6 +34,7 @@
           :key="idx"
           @click="handleMenuClick(child)"
           class="side-sub-menu-item"
+          :disabled="child.disabled"
         >
           {{ child.label }}
         </el-menu-item>
@@ -69,6 +70,7 @@ const handleMenuClick = async (menuItem: MenuItem) => {
   hide()
 }
 
+// timer用于延迟隐藏子菜单，避免鼠标快速移动时子菜单消失
 const onItemMouseEnter = (e: MouseEvent, key: string) => {
   if (hideTimer) clearTimeout(hideTimer)
   hoveredKey.value = key

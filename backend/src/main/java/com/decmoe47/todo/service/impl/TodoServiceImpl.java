@@ -117,7 +117,11 @@ public class TodoServiceImpl implements TodoService {
         for (TodoMoveDTO todoMoveDTO : todoMoveDTOs) {
             Todo todo = todoRepo.findById(todoMoveDTO.getId())
                     .orElseThrow(() -> new ErrorResponseException(ErrorCodeEnum.TODO_NOT_FOUND));
-            TodoList todoList = todoListRepo.findById(todoMoveDTO.getTargetListId())
+
+            String listId = TodoConstants.INBOX.equals(todoMoveDTO.getTargetListId())
+                    ? inboxCacheService.getInboxId(SecurityUtil.getCurrentUserId())
+                    : todoMoveDTO.getTargetListId();
+            TodoList todoList = todoListRepo.findById(listId)
                     .orElseThrow(() -> new ErrorResponseException(ErrorCodeEnum.TODO_LIST_NOT_FOUND));      // TODO: 改用mybatis plus直接update
 
             todo.setBelongedList(todoList);

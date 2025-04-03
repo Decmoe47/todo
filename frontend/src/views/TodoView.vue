@@ -76,15 +76,43 @@ const isSidebarOpen = ref(false)
 const menuItems = computed<MenuItems>(() => ({
   move: {
     label: 'Move to',
-    children: todoStore.customTodoLists.reduce((acc: MenuItems, list) => {
-      acc[list.id] = {
-        label: list.name,
+    children: {
+      inbox: {
+        label: 'Inbox',
         action: async () => {
-          await todoStore.moveTodos([{ id: rightClickedTodoId.value, targetListId: list.id }])
+          await todoStore.moveTodos([
+            {
+              id: rightClickedTodoId.value,
+              targetListId: 'inbox',
+            },
+          ])
+          todos.value = todos.value.filter((t) => t.id !== rightClickedTodoId.value)
         },
-      }
-      return acc
-    }, {}),
+        disabled: (() => {
+          const todo = todos.value.find((t) => t.id === rightClickedTodoId.value)
+          return todo && todo.belongedList.inbox
+        })(),
+      },
+      ...todoStore.customTodoLists.reduce((acc: MenuItems, list) => {
+        acc[list.id] = {
+          label: list.name,
+          action: async () => {
+            await todoStore.moveTodos([
+              {
+                id: rightClickedTodoId.value,
+                targetListId: list.id,
+              },
+            ])
+            todos.value = todos.value.filter((t) => t.id !== rightClickedTodoId.value)
+          },
+          disabled: (() => {
+            const todo = todos.value.find((t) => t.id === rightClickedTodoId.value)
+            return todo && todo.belongedList.id === list.id
+          })(),
+        }
+        return acc
+      }, {}),
+    },
   },
   delete: {
     label: 'Delete',
