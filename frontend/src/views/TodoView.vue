@@ -58,7 +58,7 @@ import { computed, ref, watch, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import ContextMenu from '@/components/ContextMenu.vue'
 import TodoDetailSidebar from '@/components/TodoDetailSidebar.vue'
-import type { MenuItem } from '@/types/menu.ts'
+import type { MenuItems } from '@/types/menu.ts'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -72,7 +72,19 @@ const listId = computed(() => route.params.listId as string)
 const selectedTodo = ref<TodoDTO | null>(null)
 const isSidebarOpen = ref(false)
 
-const menuItems: { [key: string]: MenuItem } = {
+const menuItems = computed<MenuItems>(() => ({
+  move: {
+    label: 'Move to',
+    children: todoStore.customTodoLists.reduce((acc: MenuItems, list) => {
+      acc[list.id] = {
+        label: list.name,
+        action: async () => {
+          await todoStore.moveTodos([{ id: rightClickedTodoId.value, targetListId: list.id }])
+        },
+      }
+      return acc
+    }, {}),
+  },
   delete: {
     label: 'Delete',
     action: async () => {
@@ -80,7 +92,7 @@ const menuItems: { [key: string]: MenuItem } = {
       todos.value = todos.value.filter((todo) => todo.id !== rightClickedTodoId.value)
     },
   },
-}
+}))
 
 const onContextMenu = (e: MouseEvent, todoId: number) => {
   contextMenuRef.value!.show(e)

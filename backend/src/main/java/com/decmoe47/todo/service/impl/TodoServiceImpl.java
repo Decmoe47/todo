@@ -5,10 +5,7 @@ import cn.hutool.core.collection.ListUtil;
 import com.decmoe47.todo.constant.TodoConstants;
 import com.decmoe47.todo.constant.enums.ErrorCodeEnum;
 import com.decmoe47.todo.exception.ErrorResponseException;
-import com.decmoe47.todo.model.dto.TodoAddDTO;
-import com.decmoe47.todo.model.dto.TodoDeleteDTO;
-import com.decmoe47.todo.model.dto.TodoToggleDTO;
-import com.decmoe47.todo.model.dto.TodoUpdateDTO;
+import com.decmoe47.todo.model.dto.*;
 import com.decmoe47.todo.model.entity.Todo;
 import com.decmoe47.todo.model.entity.TodoList;
 import com.decmoe47.todo.model.entity.User;
@@ -111,6 +108,27 @@ public class TodoServiceImpl implements TodoService {
         Cache todoAccess = cacheManager.getCache("todoAccess");
         if (todoAccess != null) {
             todoAccess.evict(SecurityUtil.getCurrentUserId() + "_" + todoId);
+        }
+    }
+
+    @Override
+    public List<TodoVO> moveTodos(List<TodoMoveDTO> todoMoveDTOs) {
+        List<Todo> todosToSave = new ArrayList<>();
+        for (TodoMoveDTO todoMoveDTO : todoMoveDTOs) {
+            Todo todo = todoRepo.findById(todoMoveDTO.getId())
+                    .orElseThrow(() -> new ErrorResponseException(ErrorCodeEnum.TODO_NOT_FOUND));
+            TodoList todoList = todoListRepo.findById(todoMoveDTO.getTargetListId())
+                    .orElseThrow(() -> new ErrorResponseException(ErrorCodeEnum.TODO_LIST_NOT_FOUND));      // TODO: 改用mybatis plus直接update
+
+            todo.setBelongedList(todoList);
+            todosToSave.add(todo);
+        }
+
+        if (!todosToSave.isEmpty()) {
+            todoRepo.saveAll(todosToSave);
+            return BeanUtil.copyToList(todosToSave, TodoVO.class);
+        } else {
+            return ListUtil.empty();
         }
     }
 }

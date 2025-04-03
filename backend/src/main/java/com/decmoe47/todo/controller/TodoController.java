@@ -1,9 +1,6 @@
 package com.decmoe47.todo.controller;
 
-import com.decmoe47.todo.model.dto.TodoAddDTO;
-import com.decmoe47.todo.model.dto.TodoDeleteDTO;
-import com.decmoe47.todo.model.dto.TodoToggleDTO;
-import com.decmoe47.todo.model.dto.TodoUpdateDTO;
+import com.decmoe47.todo.model.dto.*;
 import com.decmoe47.todo.model.vo.R;
 import com.decmoe47.todo.model.vo.TodoVO;
 import com.decmoe47.todo.service.TodoService;
@@ -49,5 +46,10 @@ public class TodoController {
             "T(java.util.Collections).singletonList(#todoToggleDTO.id))")
     public R<TodoVO> toggleTodo(@RequestBody TodoToggleDTO todoToggleDTO) {
         return R.ok(todoService.toggleTodo(todoToggleDTO));
+    }
+
+    @PostMapping("/move")
+    public R<List<TodoVO>> moveTodos(@RequestBody List<TodoMoveDTO> todoMoveDTOs) {
+        return R.ok(todoService.moveTodos(todoMoveDTOs));
     }
 }

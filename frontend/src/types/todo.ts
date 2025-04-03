@@ -29,6 +29,11 @@ export interface TodoUpdateDTO {
   dueDate?: Date
 }
 
+export interface TodoMoveDTO {
+  id: number
+  targetListId: string
+}
+
 export interface TodoListDTO {
   id: string
   name: string

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { TodoAddDTO, TodoDTO, TodoListDTO, TodoUpdateDTO } from '@/types/todo.ts'
+import type { TodoAddDTO, TodoDTO, TodoListDTO, TodoMoveDTO, TodoUpdateDTO } from '@/types/todo.ts'
 import axiosInstance from '@/libs/axios.ts'
 
 interface TodoState {
@@ -81,6 +81,10 @@ export const useTodoStore = defineStore('todoList', {
       return await axiosInstance.post<TodoDTO, TodoDTO>('todos/toggle', {
         id: todoId,
       })
+    },
+
+    async moveTodos(todoMoveDTOs: TodoMoveDTO[]) {
+      return await axiosInstance.post<TodoDTO[], TodoDTO[]>('todos/move', todoMoveDTOs)
     },
   },
 

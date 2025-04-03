@@ -1,4 +1,9 @@
 export interface MenuItem {
   label: string
-  action: () => Promise<void>
+  action?: () => Promise<void>
+  children?: MenuItems
+}
+
+export interface MenuItems {
+  [key: string] : MenuItem
 }
