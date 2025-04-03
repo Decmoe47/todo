@@ -59,6 +59,7 @@ import { useRoute } from 'vue-router'
 import ContextMenu from '@/components/ContextMenu.vue'
 import TodoDetailSidebar from '@/components/TodoDetailSidebar.vue'
 import type { MenuItems } from '@/types/menu.ts'
+import emitter from '@/utils/eventBus.ts'
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -95,6 +96,7 @@ const menuItems = computed<MenuItems>(() => ({
 }))
 
 const onContextMenu = (e: MouseEvent, todoId: number) => {
+  emitter.emit('hide-context-menu')
   contextMenuRef.value!.show(e)
   rightClickedTodoId.value = todoId
 }

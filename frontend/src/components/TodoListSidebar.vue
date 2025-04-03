@@ -68,6 +68,7 @@ import { useUserStore } from '@/stores/user'
 import { useTodoStore } from '@/stores/todo.ts'
 import ContextMenu from '@/components/ContextMenu.vue'
 import type { MenuItem } from '@/types/menu.ts'
+import emitter from '@/utils/eventBus.ts'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -99,6 +100,7 @@ const menuItems: { [key: string]: MenuItem } = {
 }
 
 const onContextMenu = (e: MouseEvent, listId: string) => {
+  emitter.emit('hide-context-menu')
   contextMenuRef.value!.show(e)
   rightClickedListId.value = listId
 }

@@ -46,6 +46,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { MenuItem, MenuItems } from '@/types/menu.ts'
 import { ArrowRight } from '@element-plus/icons-vue'
+import emitter from '@/utils/eventBus.ts'
 
 const props = defineProps<{
   menuItems: MenuItems
@@ -93,6 +94,7 @@ const onMenuMouseEnter = () => {
   if (hideTimer) clearTimeout(hideTimer)
 }
 
+// 显示隐藏右键菜单
 const show = (e: MouseEvent) => {
   e.preventDefault()
   x.value = e.clientX
@@ -105,9 +107,11 @@ const hide = () => {
 
 onMounted(() => {
   window.addEventListener('click', hide)
+  emitter.on('hide-context-menu', hide)
 })
 onBeforeUnmount(() => {
   window.removeEventListener('click', hide)
+  emitter.off('hide-context-menu', hide)
 })
 
 defineExpose({
