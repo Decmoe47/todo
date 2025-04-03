@@ -16,7 +16,7 @@ import com.decmoe47.todo.repository.UserRepository;
 import com.decmoe47.todo.service.AuthService;
 import com.decmoe47.todo.service.MailService;
 import com.decmoe47.todo.service.TokenService;
-import com.decmoe47.todo.service.VerifyCodeService;
+import com.decmoe47.todo.service.VerificationCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -37,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
     private final TokenService tokenService;
     private final UserRepository userRepo;
     private final TodoListRepository todoListRepo;
-    private final VerifyCodeService verifyCodeService;
+    private final VerificationCodeService verificationCodeService;
     private final AuthenticationManager authenticationManager;
 
     @Transactional(rollbackFor = Exception.class)
@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         if (userRepo.findByEmail(userRegisterDTO.getEmail()).isPresent())
             throw new ErrorResponseException(ErrorCodeEnum.USER_ALREADY_EXISTS);
 
-        verifyCodeService.checkCode(userRegisterDTO.getVerificationCode());
+        verificationCodeService.checkCode(userRegisterDTO.getVerificationCode(), userRegisterDTO.getEmail());
 
         User user = BeanUtil.toBean(userRegisterDTO, User.class);
         user = saveNewUser(user);
@@ -66,13 +66,14 @@ public class AuthServiceImpl implements AuthService {
         return BeanUtil.toBean(user, UserVO.class);
     }
 
-    public void sendVerifyCode(String email) {
-        String code = verifyCodeService.createCode();
+    public void sendVerificationCode(String email) {
+        String code = verificationCodeService.createCode(email);
         List<String> toList = List.of(email);
         boolean sent = mailService.send(
-                toList, MailTemplate.VERIFY_CODE_SUBJECT, MailTemplate.VERIFY_CODE_BODY.replace("{code}", code));
+                toList, MailTemplate.VERIFICATION_CODE_SUBJECT,
+                MailTemplate.VERIFICATION_CODE_BODY.replace("{code}", code));
         if (!sent)
-            throw new ErrorResponseException(ErrorCodeEnum.VERIFY_CODE_SEND_FAILED);
+            throw new ErrorResponseException(ErrorCodeEnum.VERIFICATION_CODE_SEND_FAILED);
     }
 
     @Override

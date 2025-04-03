@@ -7,7 +7,7 @@ export interface RegisterForm {
   name: string
   email: string
   password: string
-  verifyCode: string
+  verificationCode: string
 }
 
 export interface UserDTO {

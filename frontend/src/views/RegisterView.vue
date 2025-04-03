@@ -23,11 +23,11 @@
         <el-input v-model="form.password" placeholder="password" type="password" prefix-icon="lock" />
       </el-form-item>
 
-      <el-form-item prop="verifyCode">
-        <el-input v-model="form.verifyCode" placeholder="verify code" maxlength="4">
+      <el-form-item prop="verificationCode">
+        <el-input v-model="form.verificationCode" placeholder="verification code" maxlength="4">
           <template #append>
-            <el-button @click="getVerifyCode" :disabled="verifyCodeSent">
-              {{ verifyCodeSent ? `Retry after ${timer}` : 'Get Code' }}
+            <el-button @click="getVerificationCode" :disabled="verificationCodeSent">
+              {{ verificationCodeSent ? `Retry after ${timer}` : 'Get Code' }}
             </el-button>
           </template>
         </el-input>
@@ -38,7 +38,7 @@
           type="primary"
           native-type="submit"
           style="height: 40px; font-size: 18px; font-weight: bold; margin: 10px auto; width: 100%"
-          :disabled="!form.email || !form.password || !form.verifyCode"
+          :disabled="!form.email || !form.password || !form.verificationCode"
         >
           Register
         </el-button>
@@ -60,12 +60,12 @@ const router = useRouter()
 const store = useUserStore()
 
 const timer = ref(0)
-const verifyCodeSent = ref(false)
+const verificationCodeSent = ref(false)
 const form = reactive<RegisterForm>({
   name: '',
   email: '',
   password: '',
-  verifyCode: '',
+  verificationCode: '',
 })
 
 const rules = {
@@ -83,21 +83,16 @@ const rules = {
       trigger: 'blur',
     },
   ],
-  verifyCode: [
+  verificationCode: [
     { required: true, message: 'Please enter the verification code', trigger: 'blur' },
     { len: 4, message: 'Verification code must be 4 digits', trigger: 'blur' },
   ],
 }
 
 const handleSubmit = async () => {
-  try {
-    await store.register(form)
-    ElMessage.success('Register successfully')
-    await router.replace('/login')
-  } catch (error) {
-    console.error(error)
-    ElMessage.error('Register failed! Please try again later.')
-  }
+  await store.register(form)
+  ElMessage.success('Register successfully')
+  await router.replace('/login')
 }
 
 // 在组件挂载时恢复倒计时状态
@@ -107,7 +102,7 @@ onMounted(() => {
     const remaining = Math.floor((parseInt(expires) - Date.now()) / 1000)
     if (remaining > 0) {
       timer.value = remaining
-      verifyCodeSent.value = true
+      verificationCodeSent.value = true
 
       countdown()
     } else {
@@ -116,24 +111,24 @@ onMounted(() => {
   }
 })
 
-const getVerifyCode = async () => {
+const getVerificationCode = async () => {
   if (!form.email) {
     ElMessage.error('Please enter the email')
     return
   }
   try {
-    verifyCodeSent.value = true
+    verificationCodeSent.value = true
     timer.value = 60
-    await store.sendVerifyCode(form.email)
+    await store.sendVerificationCode(form.email)
     // 保存倒计时结束的时间戳（当前时间 + 60秒）
-    localStorage.setItem('verifyCodeExpires', String(Date.now() + 60000))
-    ElMessage.success('Send verify code successfully')
+    localStorage.setItem('verificationCodeExpires', String(Date.now() + 60000))
+    ElMessage.success('Send verification code successfully')
 
     countdown()
   } catch (e) {
-    verifyCodeSent.value = false
+    verificationCodeSent.value = false
     console.error(e)
-    ElMessage.error('Failed to send verify code. Please try again.')
+    ElMessage.error('Failed to send verification code. Please try again later.')
   }
 }
 
@@ -143,8 +138,8 @@ function countdown() {
     timer.value--
     if (timer.value <= 0) {
       clearInterval(interval)
-      verifyCodeSent.value = false
-      localStorage.removeItem('verifyCodeExpires')
+      verificationCodeSent.value = false
+      localStorage.removeItem('verificationCodeExpires')
     }
   }, 1000)
 }

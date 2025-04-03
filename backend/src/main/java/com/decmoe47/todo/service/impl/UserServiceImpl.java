@@ -12,7 +12,7 @@ import com.decmoe47.todo.model.entity.User;
 import com.decmoe47.todo.model.vo.UserVO;
 import com.decmoe47.todo.repository.UserRepository;
 import com.decmoe47.todo.service.UserService;
-import com.decmoe47.todo.service.VerifyCodeService;
+import com.decmoe47.todo.service.VerificationCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepo;
-    private final VerifyCodeService verifyCodeService;
+    private final VerificationCodeService verificationCodeService;
     private final TokenServiceImpl tokenService;
 
     public UserVO getUser(long userId) throws ErrorResponseException {
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
             user.setName(userUpdateDTO.getName());
         }
         if (StrUtil.isEmpty(userUpdateDTO.getNewEmail())) {
-            verifyCodeService.checkCode(userUpdateDTO.getVerificationCode());
+            verificationCodeService.checkCode(userUpdateDTO.getVerificationCode(), userUpdateDTO.getNewEmail());
             user.setEmail(userUpdateDTO.getNewEmail());
         }
 

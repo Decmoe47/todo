@@ -7,4 +7,5 @@ import lombok.NoArgsConstructor;
 public final class RedisConstants {
 
     public static final String BLACKLIST_TOKEN = "auth:token:blacklist:{}";
+    public static final String VERIFICATION_CODE = "auth:verificationCode:email:{}";
 }

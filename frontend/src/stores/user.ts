@@ -35,7 +35,7 @@ export const useUserStore = defineStore('user', {
       setRefreshToken(tokens.refreshToken)
     },
 
-    async sendVerifyCode(email: string) {
+    async sendVerificationCode(email: string) {
       return await axiosInstance.post<void, void>('auth/send-verify-code', { email: email })
     },
 

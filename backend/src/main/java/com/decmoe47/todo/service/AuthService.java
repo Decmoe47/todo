@@ -13,7 +13,7 @@ public interface AuthService {
 
     UserVO register(UserRegisterDTO userRegisterDTO);
 
-    void sendVerifyCode(String email);
+    void sendVerificationCode(String email);
 
     AuthenticationTokensVO refreshAccessToken(String refreshToken);
 }

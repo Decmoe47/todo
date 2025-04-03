@@ -6,14 +6,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class MailTemplate {
 
-    public static final String VERIFY_CODE_SUBJECT = "验证码";
+    public static final String VERIFICATION_CODE_SUBJECT = "[Todo APP] Your verification code";
 
-    public static final String VERIFY_CODE_BODY = """
-            您的验证码是：
+    public static final String VERIFICATION_CODE_BODY = """
+            Your verification code is:
             
             {code}
             
-            验证码5分钟内有效。
+            The verification code is valid for 5 minutes.
             """;
 
     public static final String AT_MESSAGE_SUBJECT = "有人@了你";
