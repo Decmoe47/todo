@@ -17,6 +17,8 @@ public class MailConfig {
     private String username;
     @Value("${spring.mail.password}")
     private String password;
+    @Value("${spring.mail.protocol}")
+    private String protocol;
 
     @Bean
     public JavaMailSender javaMailSender() {
@@ -26,6 +28,7 @@ public class MailConfig {
         sender.setUsername(username);
         sender.setPassword(password);
         sender.setDefaultEncoding("Utf-8");
+        sender.setProtocol(protocol);
         return sender;
     }
 }
