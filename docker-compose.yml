@@ -4,7 +4,7 @@ networks:
 
 services:
   springboot-app:
-    image: todo-backend:latest
+    image: decmoe47/todo-backend:latest
     container_name: springboot-app
     ports:
       - "8080:8080"
@@ -15,7 +15,7 @@ services:
       - my-network
 
   vue-app:
-    image: todo-frontend:latest
+    image: decmoe47/todo-frontend:latest
     container_name: vue-app
     ports:
       - "5173:80"

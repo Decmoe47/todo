@@ -1,55 +1,64 @@
 # TODO
 
-## 技术栈
+## Demo
 
-- 前端：Vue 3、Element Plus、Vue Router、Pinia
-- 后端：Spring Boot 3、Spring Security、Spring Data JPA、Spring Cache 
-- 数据库：MySQL、Redis
+http://3.112.70.190:5173/
 
-## 功能描述
+Register your own account or use the following accout to try: 
+- email: lingsq47@outlook.com
+- password: 123456
 
-- 用户登录/注册。
-- 待办任务的增删改查。
-- 待办清单的增删改。
-- 简单的定时提醒功能（比如任务的到期时间）。
-- 创建团队，在团队中共享任务。
+## Technology stack
 
-## 实现进度
+- Frontend: Vue 3, Element Plus, Vue Router, Pinia
+- Backend: Spring Boot 3, Spring Security, Spring Data JPA, Spring Cache 
+- Databse: MySQL, Redis
+- Infra: AWS EC2, Docker, Nginx
 
-- [ ] 用户
-  - [x] 登录
-    - [x] 注册
-    - [x] 注销
-    - [ ] _设置_
-    - [x] 权限控制
+## Function description
+
+- [x] User login/registration.
+- [x] Add, delete, modify, and check to-do tasks.
+- [x] Add, delete, and modify to-do lists.
+- [ ] Simple timer reminder function (such as task expiration date).
+- [ ] Create a team and share tasks within the team.
+
+## Implementation progress
+
+- [ ] user
+  - [x] login
+  - [x] register
+  - [x] logout
+  - [ ] settings
+  - [x] permission control
 - [ ] todo
-    - [x] 增
-    - [ ] 查
-    - [x] 删
-    - [x] 改名
-    - [x] 改提醒日期
-    - [ ] 移动
-    - [ ] _分组_
-    - [ ] _排序_
-    - [ ] todo提醒
-      - [ ] 显示提醒日期
-      - [ ] _应用内提醒（WebSocket）_
-      - [ ] 邮件提醒
-      - [ ] 可以只选日期不选时间
-    - [ ] 多选
-      - [ ] 删
-      - [ ] 改名
-      - [ ] 改提醒日期
-      - [ ] 移动
-      - [ ] 分组
+  - [x] add
+  - [x] delete
+  - [x] rename
+  - [x] change reminder date
+  - [x] move
+  - [ ] search
+  - [ ] group
+  - [ ] sort
+  - [ ] todo reminder
+    - [ ] show reminder date
+    - [ ] _in-app reminder (WebSocket)_
+    - [ ] email reminder
+    - [ ] can select only the date but not the time
+  - [ ] multiple select
+    - [ ] delete
+    - [ ] rename
+    - [ ] change reminder date
+    - [ ] move
+    - [ ] group
 - [ ] todo list
-    - [x] 增
-    - [x] 删
-    - [x] 改名
-    - [ ] _智能清单_
-- [ ] _任务共享与协作_
-- [ ] _响应式布局_
-- [ ] _数据统计图表_
-- [x] docker + Nginx部署
-- [ ] 部署到AWS
-- [ ] _Github Actions CI/CD_
+  - [x] add
+  - [x] delete
+  - [x] rename
+  - [ ] _smart lists_
+- [ ] _task sharing and collaboration_
+- [ ] _responsive layout for mobile_
+- [ ] _statistical charts_
+- [x] Docker + Nginx deployment
+- [x] deploy to AWS
+- [ ] Github Actions CI/CD
