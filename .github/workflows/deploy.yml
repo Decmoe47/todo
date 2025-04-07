@@ -15,82 +15,64 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # ========================
-      # Cache Maven dependencies
-      # ========================
-      - name: Cache Maven
-        uses: actions/cache@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
         with:
-          path: ~/.m2/repository
-          key: maven-${{ hashFiles('backend/pom.xml') }}
-          restore-keys: maven-
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # ========================
-      # Build JAR
-      # ========================
+      - name: Set up JDK 21 and cache maven dependencies
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+          cache-dependency-path: 'backend/pom.xml'
+
       - name: Build Spring Boot JAR
         run: |
           cd backend
           mvn clean package -DskipTests
           cd ..
 
-      # ==========================
-      # Set up Docker Buildx
-      # ==========================
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      # ==========================
-      # Login to Docker Hub
-      # ==========================
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # ==========================
-      # Cache Docker build layers
-      # ==========================
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-docker-
-
-      # ==========================
-      # Build & Push Backend
-      # ==========================
       - name: Build & push backend image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
+        id: build-backend
         with:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_BACKEND }}:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          tags: |
+            ${{ env.IMAGE_BACKEND }}:latest
+            ${{ env.IMAGE_BACKEND }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      # ==========================
-      # Build & Push Frontend
-      # ==========================
+      - name: Set up Node.js 22 and cache npm dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
       - name: Build & push frontend image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
+        id: build-frontend
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: true
-          tags: ${{ env.IMAGE_FRONTEND }}:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          tags: |
+            ${{ env.IMAGE_FRONTEND }}:latest
+            ${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      # ==========================
-      # SSH Deploy to EC2
-      # ==========================
       - name: Setup SSH
         run: |
           echo "${{ secrets.EC2_KEY }}" > key.pem
@@ -99,7 +81,11 @@ jobs:
       - name: SSH to EC2 and deploy
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            set -e   # 如果任何命令失败，则立即退出脚本
             cd /home/ubuntu/todo
+            echo "Pulling latest images..."
             docker-compose pull
-            docker-compose up -d
+            echo "Starting services..."
+            docker-compose up -d --remove-orphans
+            echo "Deployment successful!"
           EOF
