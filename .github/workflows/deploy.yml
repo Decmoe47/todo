@@ -29,7 +29,7 @@ jobs:
       - name: Build Spring Boot JAR
         run: |
           cd backend
-          mvn -f backend/pom.xml clean package -DskipTests
+          mvn clean package -DskipTests
 
       - name: Build & push backend
         run: |
