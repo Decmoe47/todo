@@ -23,9 +23,6 @@ services:
     container_name: vue-app
     ports:
       - "80:80"
-    environment:
-      - NODE_ENV=production
-      - VITE_API_URL=/api
     restart: unless-stopped
     networks:
       - my-network

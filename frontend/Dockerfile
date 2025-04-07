@@ -1,6 +1,10 @@
 # 使用官方的 Node.js 基础镜像
 FROM node:22 AS build-stage
 
+ENV VITE_API_URL=/api
+
+ENV NODE_ENV=production
+
 # 设置工作目录
 WORKDIR /app
 
