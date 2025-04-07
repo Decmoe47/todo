@@ -76,3 +76,4 @@ log/
 *.yml
 *.yaml
 !docker-compose.yml
+!deploy.yml
