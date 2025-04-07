@@ -61,4 +61,4 @@ Register your own account or use the following accout to try:
 - [ ] _statistical charts_
 - [x] Docker + Nginx deployment
 - [x] deploy to AWS
-- [ ] Github Actions CI/CD
+- [x] Github Actions CI/CD
