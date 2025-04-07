@@ -2,7 +2,7 @@
 
 ## Demo
 
-http://3.112.70.190:5173/
+http://3.112.70.190:80/
 
 Register your own account or use the following accout to try: 
 - email: lingsq47@outlook.com
