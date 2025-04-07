@@ -10,6 +10,8 @@ COPY target/todo-backend.jar app.jar
 # 将 application-prod.yml 文件复制到镜像内的 /etc/config/ 目录
 COPY src/main/resources/application-prod.yml application-prod.yml
 
+RUN microdnf install -y vim
+
 # 暴露端口（假设 Spring Boot 使用 8080 端口）
 EXPOSE 8080
 
