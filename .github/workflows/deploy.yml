@@ -81,11 +81,17 @@ jobs:
       - name: SSH to EC2 and deploy
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e   # 如果任何命令失败，则立即退出脚本
+            set -e # 确保命令失败时退出
+
+            # 将 GitHub Secret 的内容写入 EC2 上的文件
+            echo "${{ secrets.PROD_CONFIG_YML }}" > /home/ubuntu/todo/application-prod.yml
+            chmod 600 /home/ubuntu/todo/application-prod.yml # 保护文件权限
+
             cd /home/ubuntu/todo
             echo "Pulling latest images..."
             docker-compose pull
-            echo "Starting services..."
+            echo "Starting services with mounted config..."
+            # 确保 docker-compose.yml 配置了 volume mount
             docker-compose up -d --remove-orphans
             echo "Deployment successful!"
           EOF

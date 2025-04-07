@@ -8,6 +8,10 @@ services:
     container_name: springboot-app
     ports:
       - "8080:8080"
+    volumes:
+      # 将宿主机上的配置文件挂载到容器内的 /app 目录
+      - ./application-prod.yml:/app/application-prod.yml:ro # ro表示只读挂载
+    restart: unless-stopped
     depends_on:
       - mysql-db
       - redis-cache
@@ -21,6 +25,7 @@ services:
       - "80:80"
     environment:
       - NODE_ENV=production
+    restart: unless-stopped
     networks:
       - my-network
 
@@ -36,6 +41,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    restart: unless-stopped
     networks:
       - my-network
 
@@ -44,6 +50,7 @@ services:
     container_name: redis-cache
     ports:
       - "6379:6379"
+    restart: unless-stopped
     networks:
       - my-network
 
