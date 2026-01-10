@@ -59,6 +59,17 @@ class AuthServiceImplTest : FunSpec({
         error.errorCode shouldBe ErrorCode.USERNAME_OR_PASSWORD_INCORRECT
     }
 
+    test("login throws USERNAME_OR_PASSWORD_INCORRECT when principal is not user") {
+        val authentication = UsernamePasswordAuthenticationToken("bad", null, emptyList())
+        every { authenticationManager.authenticate(any()) } returns authentication
+
+        val error = shouldThrow<ErrorResponseException> {
+            service.login(UserLoginRequest(email = "user@test.com", password = "pw"))
+        }
+
+        error.errorCode shouldBe ErrorCode.USERNAME_OR_PASSWORD_INCORRECT
+    }
+
     test("login returns user response and saves user") {
         val user = User(id = 5, email = "user@test.com", password = "pw", name = "name")
         val authentication = UsernamePasswordAuthenticationToken(user, null, emptyList())
@@ -104,6 +115,15 @@ class AuthServiceImplTest : FunSpec({
         error.errorCode shouldBe ErrorCode.VERIFICATION_CODE_SEND_FAILED
     }
 
+    test("sendVerificationCode succeeds when mail service returns true") {
+        every { verificationCodeService.createCode("user@test.com") } returns "1234"
+        every { mailService.send(any(), any(), any()) } returns true
+
+        service.sendVerificationCode("user@test.com")
+
+        verify { mailService.send(listOf("user@test.com"), any(), any()) }
+    }
+
     test("refreshAccessToken throws when token is invalid") {
         every { tokenService.isValid("bad") } returns false
 
@@ -112,6 +132,25 @@ class AuthServiceImplTest : FunSpec({
         }
 
         error.errorCode shouldBe ErrorCode.REFRESH_TOKEN_EXPIRED
+    }
+
+    test("refreshAccessToken returns new tokens when valid") {
+        val tokens = AuthenticationTokensResponse(accessToken = "access", refreshToken = "refresh")
+        every { tokenService.isValid("good") } returns true
+        every { tokenService.refresh("good") } returns tokens
+
+        service.refreshAccessToken("good") shouldBe tokens
+    }
+
+    test("logout invalidates token and clears context") {
+        every { tokenService.invalidate("token") } just runs
+        SecurityContextHolder.getContext().authentication =
+            UsernamePasswordAuthenticationToken("user", null, emptyList())
+
+        service.logout("token")
+
+        SecurityContextHolder.getContext().authentication shouldBe null
+        verify { tokenService.invalidate("token") }
     }
 
     test("register saves new user and creates inbox list") {

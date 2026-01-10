@@ -1,8 +1,9 @@
-package com.decmoe47.todo.service
+package com.decmoe47.todo.service.impl
 
 import com.decmoe47.todo.constant.RedisConstants
 import com.decmoe47.todo.constant.enums.ErrorCode
 import com.decmoe47.todo.exception.ErrorResponseException
+import com.decmoe47.todo.service.VerificationCodeService
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit

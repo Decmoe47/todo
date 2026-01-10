@@ -4,8 +4,8 @@ import com.decmoe47.todo.constant.JwtConstants
 import com.decmoe47.todo.constant.enums.ErrorCode
 import com.decmoe47.todo.service.TokenService
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -36,6 +36,18 @@ class JwtAuthenticationFilterTest : FunSpec({
 
     test("missing authorization header returns unauthorized error") {
         val request = MockHttpServletRequest("GET", "/api/todos")
+        val response = MockHttpServletResponse()
+        val chain = mockk<jakarta.servlet.FilterChain>(relaxed = true)
+
+        filter.doFilter(request, response, chain)
+
+        response.contentAsString shouldContain "\"code\":${ErrorCode.UNAUTHORIZED.code}"
+        verify(exactly = 0) { chain.doFilter(any(), any()) }
+    }
+
+    test("authorization header without bearer prefix returns unauthorized error") {
+        val request = MockHttpServletRequest("GET", "/api/todos")
+        request.addHeader(HttpHeaders.AUTHORIZATION, "Token bad")
         val response = MockHttpServletResponse()
         val chain = mockk<jakarta.servlet.FilterChain>(relaxed = true)
 

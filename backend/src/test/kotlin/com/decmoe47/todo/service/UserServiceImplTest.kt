@@ -11,10 +11,7 @@ import com.decmoe47.todo.service.impl.UserServiceImpl
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.runs
+import io.mockk.*
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 
 class UserServiceImplTest : FunSpec({
@@ -40,6 +37,16 @@ class UserServiceImplTest : FunSpec({
         error.errorCode shouldBe ErrorCode.USER_NOT_FOUND
     }
 
+    test("getUser returns user response when found") {
+        val user = User(id = 10, email = "user@test.com", password = "pw", name = "name")
+        every { userRepository.first(10L) } returns user
+
+        val result = service.getUser(10L)
+
+        result.id shouldBe 10L
+        result.email shouldBe "user@test.com"
+    }
+
     test("searchUser throws NO_QUERY_PARAM_PROVIDED when all params are null") {
         val error = shouldThrow<ErrorResponseException> {
             service.searchUser(UserSearchRequest(id = null, name = null, email = null))
@@ -53,6 +60,43 @@ class UserServiceImplTest : FunSpec({
 
         val error = shouldThrow<ErrorResponseException> {
             service.searchUser(UserSearchRequest(id = null, name = null, email = "user@test.com"))
+        }
+
+        error.errorCode shouldBe ErrorCode.USER_NOT_FOUND
+    }
+
+    test("searchUser returns users by email") {
+        val user = User(id = 5, email = "mail@test.com", password = "pw", name = "name")
+        every { userRepository.selectByEmail("mail@test.com") } returns listOf(user)
+
+        val result = service.searchUser(UserSearchRequest(id = null, name = null, email = "mail@test.com"))
+
+        result.first().email shouldBe "mail@test.com"
+    }
+
+    test("searchUser returns user by id") {
+        val user = User(id = 2, email = "id@test.com", password = "pw", name = "name")
+        every { userRepository.first(2L) } returns user
+
+        val result = service.searchUser(UserSearchRequest(id = 2, name = null, email = null))
+
+        result.first().id shouldBe 2L
+    }
+
+    test("searchUser returns users by name") {
+        val user = User(id = 3, email = "name@test.com", password = "pw", name = "Name")
+        every { userRepository.selectByName("Name") } returns listOf(user)
+
+        val result = service.searchUser(UserSearchRequest(id = null, name = "Name", email = null))
+
+        result.first().id shouldBe 3L
+    }
+
+    test("searchUser throws USER_NOT_FOUND when name lookup returns empty") {
+        every { userRepository.selectByName("missing") } returns emptyList()
+
+        val error = shouldThrow<ErrorResponseException> {
+            service.searchUser(UserSearchRequest(id = null, name = "missing", email = null))
         }
 
         error.errorCode shouldBe ErrorCode.USER_NOT_FOUND
@@ -78,6 +122,24 @@ class UserServiceImplTest : FunSpec({
         result.name shouldBe "new"
     }
 
+    test("updateUser keeps values when name and email are blank") {
+        val user = User(id = 1, email = "old@test.com", password = "pw", name = "old")
+        val request = UserUpdateRequest(
+            id = 1,
+            name = " ",
+            email = "",
+            verificationCode = "1234"
+        )
+        every { userRepository.first(1L) } returns user
+        every { userRepository.update(user) } returns user
+
+        val result = service.updateUser(1L, request)
+
+        result.name shouldBe "old"
+        result.email shouldBe "old@test.com"
+        verify(exactly = 0) { verificationCodeService.checkCode(any(), any()) }
+    }
+
     test("getUserByToken throws ACCESS_TOKEN_EXPIRED when token is invalid") {
         every { tokenService.isValid("bad") } returns false
 
@@ -99,6 +161,21 @@ class UserServiceImplTest : FunSpec({
         error.errorCode shouldBe ErrorCode.USER_NOT_FOUND
     }
 
+    test("getUserByToken throws USER_NOT_FOUND when user record is missing") {
+        val principal = SecurityUser(id = 2, email = "user@test.com")
+        val authentication = UsernamePasswordAuthenticationToken(principal, null, emptyList())
+
+        every { tokenService.isValid("good") } returns true
+        every { tokenService.parse("good") } returns authentication
+        every { userRepository.first(2L) } returns null
+
+        val error = shouldThrow<ErrorResponseException> {
+            service.getUserByToken("good")
+        }
+
+        error.errorCode shouldBe ErrorCode.USER_NOT_FOUND
+    }
+
     test("loadUserByUsername throws USER_NOT_FOUND when email is missing") {
         every { userRepository.firstByEmail("missing@test.com") } returns null
 
@@ -107,6 +184,16 @@ class UserServiceImplTest : FunSpec({
         }
 
         error.errorCode shouldBe ErrorCode.USER_NOT_FOUND
+    }
+
+    test("loadUserByUsername returns security user when found") {
+        val user = User(id = 4, email = "u@test.com", password = "pw", name = "name")
+        every { userRepository.firstByEmail("u@test.com") } returns user
+
+        val result = service.loadUserByUsername("u@test.com") as SecurityUser
+
+        result.id shouldBe 4L
+        result.password shouldBe "pw"
     }
 
     test("getUserByToken returns user response when token is valid") {
