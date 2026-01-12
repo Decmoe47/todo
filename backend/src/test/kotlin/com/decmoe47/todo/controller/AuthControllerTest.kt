@@ -29,7 +29,7 @@ class AuthControllerTest : FunSpec({
         val response = UserResponse(id = 1, email = "user@test.com", name = "User")
         every { authService.login(request) } returns response
 
-        controller.login(request, null).body?.data shouldBe response
+        controller.login(request).body?.data shouldBe response
 
         verify { authService.login(request) }
     }
