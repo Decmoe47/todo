@@ -12,7 +12,7 @@ class MailConfig(
     private val host: String,
 
     @param:Value($$"${spring.mail.port}")
-    private val port: Int = 0,
+    private val port: Int,
 
     @param:Value($$"${spring.mail.username}")
     private val username: String,
