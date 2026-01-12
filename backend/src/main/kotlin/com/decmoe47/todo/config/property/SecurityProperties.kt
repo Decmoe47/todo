@@ -9,10 +9,11 @@ import org.springframework.validation.annotation.Validated
 @ConfigurationProperties(prefix = "security")
 data class SecurityProperties(
     @field:Min(-1)
-    val accessTokenTtl: @Min(-1) Int,
+    val accessTokenTtl: Int,
 
     @field:Min(-1)
-    val refreshTokenTtl: @Min(-1) Int,
+    val refreshTokenTtl: Int,
 
-    val secretKey: @NotNull String
+    @field:NotNull
+    val secretKey: String
 )
