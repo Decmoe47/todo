@@ -14,6 +14,8 @@ import com.decmoe47.todo.service.UserService
 import com.decmoe47.todo.service.VerificationCodeService
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.transaction.annotation.Transactional
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @ReadOnlyTransactionalService
 class UserServiceImpl(
@@ -59,11 +61,12 @@ class UserServiceImpl(
     }
 
     override fun getUserByToken(token: String): UserResponse {
-        if (!tokenService.isValid(token)) {
+        val normalizedToken = normalizeToken(token)
+        if (!tokenService.isValid(normalizedToken)) {
             throw ErrorResponseException(ErrorCode.ACCESS_TOKEN_EXPIRED)
         }
 
-        val principal = tokenService.parse(token).principal as? SecurityUser
+        val principal = tokenService.parse(normalizedToken).principal as? SecurityUser
             ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
         val user = userRepository.first(principal.id) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
         return user.toUserResponse()
@@ -73,4 +76,7 @@ class UserServiceImpl(
         val user = userRepository.firstByEmail(email) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
         return SecurityUser(id = user.id, email = user.email, password = user.password)
     }
+
+    private fun normalizeToken(token: String): String =
+        URLDecoder.decode(token, StandardCharsets.UTF_8).trim()
 }

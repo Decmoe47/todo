@@ -7,8 +7,10 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 
 object SecurityUtil {
+    @JvmStatic
     fun getAuthentication(): Authentication? = SecurityContextHolder.getContext().authentication
 
+    @JvmStatic
     fun getCurrentUserId(): Long {
         return when (val principal = getAuthentication()?.principal) {
             is User -> principal.id

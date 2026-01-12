@@ -8,7 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.RedisSerializer
 
 @EnableCaching
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class RedisConfig {
     @Bean
     fun redisTemplate(factory: RedisConnectionFactory): RedisTemplate<String, Any> {

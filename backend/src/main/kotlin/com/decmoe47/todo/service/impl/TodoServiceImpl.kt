@@ -47,9 +47,7 @@ class TodoServiceImpl(
             belongedListId = todoList.id,
             auditable = AuditableEntity(createdBy = user.id),
         )
-
-        val savedTodo = todoRepo.save(todo)
-        return savedTodo.toTodoResponse()
+        return todoRepo.save(todo).toTodoResponse()
     }
 
     @Transactional
@@ -73,7 +71,7 @@ class TodoServiceImpl(
             description = request.description,
             auditable = todo.auditable.copy(updatedBy = SecurityUtil.getCurrentUserId()),
         )
-        return updatedTodo.toTodoResponse()
+        return todoRepo.update(updatedTodo).toTodoResponse()
     }
 
     @Transactional
@@ -88,7 +86,7 @@ class TodoServiceImpl(
                 auditable = todo.auditable.copy(updatedBy = userId),
             )
         )
-        return updatedTodo.toTodoResponse()
+        return todoRepo.update(updatedTodo).toTodoResponse()
     }
 
     @Transactional
@@ -107,7 +105,7 @@ class TodoServiceImpl(
             auditable = todo.auditable.copy(updatedBy = userId),
         )
 
-        return updatedTodo.toTodoResponse()
+        return todoRepo.update(updatedTodo).toTodoResponse()
     }
 
     private fun resolveListId(listId: String, userId: Long): Long {

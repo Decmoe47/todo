@@ -23,7 +23,7 @@ class UserControllerTest : FunSpec({
     test("getUser returns response") {
         every { userService.getUser(1) } returns response
 
-        controller.getUser(1).data shouldBe response
+        controller.getUser(1).body?.data shouldBe response
 
         verify { userService.getUser(1) }
     }
@@ -31,7 +31,7 @@ class UserControllerTest : FunSpec({
     test("getUserByToken returns response") {
         every { userService.getUserByToken("token") } returns response
 
-        controller.getUserByToken("token").data shouldBe response
+        controller.getUserByToken("token").body?.data shouldBe response
 
         verify { userService.getUserByToken("token") }
     }
@@ -40,7 +40,7 @@ class UserControllerTest : FunSpec({
         val request = UserSearchRequest(id = null, name = "User", email = null)
         every { userService.searchUser(request) } returns listOf(response)
 
-        controller.searchUser(request).data shouldBe listOf(response)
+        controller.searchUser(request).body?.data shouldBe listOf(response)
 
         verify { userService.searchUser(request) }
     }
@@ -54,7 +54,7 @@ class UserControllerTest : FunSpec({
         )
         every { userService.updateUser(1, request) } returns response
 
-        controller.updateUser(1, request).data shouldBe response
+        controller.updateUser(1, request).body?.data shouldBe response
 
         verify { userService.updateUser(1, request) }
     }

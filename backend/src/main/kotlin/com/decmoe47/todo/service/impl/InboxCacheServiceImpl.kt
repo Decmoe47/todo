@@ -1,11 +1,11 @@
 package com.decmoe47.todo.service.impl
 
+import com.decmoe47.todo.annotation.ReadOnlyTransactionalService
 import com.decmoe47.todo.repository.TodoListRepository
 import com.decmoe47.todo.service.InboxCacheService
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.stereotype.Service
 
-@Service
+@ReadOnlyTransactionalService
 class InboxCacheServiceImpl(private val todoListRepository: TodoListRepository) : InboxCacheService {
 
     @Cacheable(value = ["inbox"], key = "#userId")

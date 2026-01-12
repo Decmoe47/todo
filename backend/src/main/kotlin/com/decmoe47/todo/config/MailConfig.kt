@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.JavaMailSenderImpl
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class MailConfig(
     @param:Value($$"${spring.mail.host}")
     private val host: String,

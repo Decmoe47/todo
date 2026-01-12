@@ -2,7 +2,8 @@ package com.decmoe47.todo.handler
 
 import com.decmoe47.todo.constant.enums.ErrorCode
 import com.decmoe47.todo.exception.ErrorResponseException
-import com.decmoe47.todo.model.response.R
+import com.decmoe47.todo.model.response.Response
+import com.decmoe47.todo.util.R
 import com.decmoe47.todo.util.SecurityUtil
 import com.decmoe47.todo.util.rootCause
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.authorization.AuthorizationDeniedException
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
@@ -19,7 +21,7 @@ private val log = KotlinLogging.logger {}
 @RestControllerAdvice(basePackages = ["com.decmoe47.todo.controller"])
 class GlobalExceptionHandler {
     @ExceptionHandler(Throwable::class)
-    fun handleException(request: HttpServletRequest, e: Throwable): R<Any?> {
+    fun handleException(request: HttpServletRequest, e: Throwable): ResponseEntity<out Response<Any>> {
         return when (val rootCause = e.rootCause()) {
             is ErrorResponseException -> handleErrorResponseException(rootCause)
             is AuthorizationDeniedException -> handleAuthorizationDeniedException(request, rootCause)
@@ -31,20 +33,28 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ErrorResponseException::class)
-    fun handleErrorResponseException(e: ErrorResponseException): R<Any?> {
-        val rootCause = e.rootCause()
-
-        log.error(rootCause) { "${rootCause.message}" }
+    fun handleErrorResponseException(e: ErrorResponseException): ResponseEntity<out Response<Any>> {
+        log.error(e.rootCause()) { "${e.rootCause().message}" }
         return if (e.data != null) R.error(e.errorCode, e.data)
         else R.error(e.errorCode)
     }
 
     @ExceptionHandler(AuthorizationDeniedException::class)
-    fun handleAuthorizationDeniedException(request: HttpServletRequest, e: AuthorizationDeniedException): R<Any?> {
-        val rootCause = e.rootCause()
-
-        log.error(rootCause) { "${rootCause.message} for userId: ${SecurityUtil.getCurrentUserId()} and api: ${request.requestURI}" }
+    fun handleAuthorizationDeniedException(
+        request: HttpServletRequest,
+        e: AuthorizationDeniedException
+    ): ResponseEntity<out Response<Any>> {
+        log.error(e) { "Failed to authorize for userId: ${SecurityUtil.getCurrentUserId()} and api: ${request.requestURI}" }
         return R.error(ErrorCode.ACCESS_DENIED)
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handleValidationException(
+        request: HttpServletRequest,
+        e: MethodArgumentNotValidException
+    ): ResponseEntity<out Response<Any>> {
+        log.error(e) { "Failed to validate the request for userId: ${SecurityUtil.getCurrentUserId()} and api: ${request.requestURI}" }
+        return R.error(ErrorCode.INVALID_REQUEST_PARAMS)
     }
 
     /**

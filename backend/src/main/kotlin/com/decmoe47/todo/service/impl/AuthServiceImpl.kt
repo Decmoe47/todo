@@ -4,6 +4,7 @@ import com.decmoe47.todo.annotation.ReadOnlyTransactionalService
 import com.decmoe47.todo.constant.MailTemplate
 import com.decmoe47.todo.constant.enums.ErrorCode
 import com.decmoe47.todo.exception.ErrorResponseException
+import com.decmoe47.todo.model.dto.SecurityUser
 import com.decmoe47.todo.model.entity.AuditableEntity
 import com.decmoe47.todo.model.entity.TodoList
 import com.decmoe47.todo.model.entity.User
@@ -19,6 +20,8 @@ import com.decmoe47.todo.service.AuthService
 import com.decmoe47.todo.service.MailService
 import com.decmoe47.todo.service.TokenService
 import com.decmoe47.todo.service.VerificationCodeService
+import com.decmoe47.todo.util.now
+import kotlinx.datetime.LocalDateTime
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -36,9 +39,12 @@ class AuthServiceImpl(
     private val userRepository: UserRepository,
     private val todoListRepository: TodoListRepository,
 ) : AuthService {
+    @Transactional
     override fun login(request: UserLoginRequest): UserResponse {
         val authentication: Authentication = authenticate(request.email, request.password)
-        val user: User = authentication.principal as User
+        val principal = authentication.principal as? SecurityUser
+            ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
+        val user = userRepository.first(principal.id) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
         val authenticationTokensResponse: AuthenticationTokensResponse = tokenService.generate(authentication)
 
         return user.toUserResponse(authenticationTokensResponse)
@@ -85,14 +91,16 @@ class AuthServiceImpl(
     private fun authenticate(email: String, password: String): Authentication {
         try {
             val token = UsernamePasswordAuthenticationToken(email, password)
-            val authenticate = authenticationManager.authenticate(token)
+            val authentication = authenticationManager.authenticate(token)
 
-            val user = authenticate.principal as? User
+            val principal = authentication.principal as? SecurityUser
                 ?: throw ErrorResponseException(ErrorCode.USERNAME_OR_PASSWORD_INCORRECT)
-            userRepository.save(user)
+            val user = userRepository.first(principal.id)
+                ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
+            userRepository.update(user.copy(lastLoginTime = LocalDateTime.now))
 
-            SecurityContextHolder.getContext().authentication = authenticate
-            return authenticate
+            SecurityContextHolder.getContext().authentication = authentication
+            return authentication
         } catch (e: BadCredentialsException) {
             throw ErrorResponseException(ErrorCode.USERNAME_OR_PASSWORD_INCORRECT, e)
         }

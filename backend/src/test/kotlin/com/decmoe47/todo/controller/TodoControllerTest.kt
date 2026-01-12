@@ -34,7 +34,7 @@ class TodoControllerTest : FunSpec({
     test("getTodos returns list") {
         every { todoService.getTodos("2") } returns listOf(response)
 
-        controller.getTodos("2").data shouldBe listOf(response)
+        controller.getTodos("2").body?.data shouldBe listOf(response)
 
         verify { todoService.getTodos("2") }
     }
@@ -43,7 +43,7 @@ class TodoControllerTest : FunSpec({
         val request = TodoAddRequest(content = "todo", dueDate = null, belongedListId = "2")
         every { todoService.addTodo(request) } returns response
 
-        controller.addTodo(request).data shouldBe response
+        controller.addTodo(request).body?.data shouldBe response
 
         verify { todoService.addTodo(request) }
     }
@@ -67,7 +67,7 @@ class TodoControllerTest : FunSpec({
         )
         every { todoService.updateTodo(request) } returns response
 
-        controller.updateTodos(request).data shouldBe response
+        controller.updateTodos(request).body?.data shouldBe response
 
         verify { todoService.updateTodo(request) }
     }
@@ -76,7 +76,7 @@ class TodoControllerTest : FunSpec({
         val request = TodoToggleRequest(id = 1)
         every { todoService.toggleTodo(request) } returns response
 
-        controller.toggleTodo(request).data shouldBe response
+        controller.toggleTodo(request).body?.data shouldBe response
 
         verify { todoService.toggleTodo(request) }
     }
@@ -85,7 +85,7 @@ class TodoControllerTest : FunSpec({
         val request = TodoMoveRequest(id = 1, targetListId = "9")
         every { todoService.moveTodo(request) } returns response
 
-        controller.moveTodos(request).data shouldBe response
+        controller.moveTodos(request).body?.data shouldBe response
 
         verify { todoService.moveTodo(request) }
     }

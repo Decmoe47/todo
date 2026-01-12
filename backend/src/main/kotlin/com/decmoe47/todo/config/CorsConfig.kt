@@ -7,7 +7,7 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class CorsConfig(@param:Value($$"${cors.allowed-origins}") private val allowedOrigins: String) {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {

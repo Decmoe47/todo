@@ -21,13 +21,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true)
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class SecurityConfig(private val jwtAuthenticationFilter: JwtAuthenticationFilter) {
     @Bean
     @Throws(Exception::class)
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain? {
         http
-            .csrf(Customizer { obj: CsrfConfigurer<HttpSecurity?>? -> obj!!.disable() })
+            .csrf { obj: CsrfConfigurer<HttpSecurity?>? -> obj!!.disable() }
             .cors(Customizer.withDefaults<CorsConfigurer<HttpSecurity?>?>())
             .authorizeHttpRequests { authorize ->
                 authorize

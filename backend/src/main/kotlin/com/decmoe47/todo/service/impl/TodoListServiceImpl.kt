@@ -40,8 +40,7 @@ class TodoListServiceImpl(
             name = request.name,
             auditable = AuditableEntity(createdBy = user.id),
         )
-        val saved = todoListRepo.save(todoList)
-        return saved.toTodoListResponse()
+        return todoListRepo.save(todoList).toTodoListResponse()
     }
 
     @Transactional

@@ -30,7 +30,7 @@ class GlobalExceptionHandlerTest : FunSpec({
     test("handleException delegates to error response handler") {
         val result = handler.handleException(mockk(), ErrorResponseException(ErrorCode.TODO_NOT_FOUND))
 
-        result.code shouldBe ErrorCode.TODO_NOT_FOUND.code
+        result.body?.code shouldBe ErrorCode.TODO_NOT_FOUND.code
     }
 
     test("handleException returns access denied for authorization error") {
@@ -45,13 +45,13 @@ class GlobalExceptionHandlerTest : FunSpec({
 
         val result = handler.handleException(request, exception)
 
-        result.code shouldBe ErrorCode.ACCESS_DENIED.code
+        result.body?.code shouldBe ErrorCode.ACCESS_DENIED.code
     }
 
     test("handleException returns internal server error on unknown exception") {
         val result = handler.handleException(mockk(), RuntimeException("boom"))
 
-        result.code shouldBe ErrorCode.INTERNAL_SERVER_ERROR.code
+        result.body?.code shouldBe ErrorCode.INTERNAL_SERVER_ERROR.code
     }
 
     test("handleErrorResponseException includes data when provided") {
@@ -59,15 +59,15 @@ class GlobalExceptionHandlerTest : FunSpec({
         val result =
             handler.handleErrorResponseException(ErrorResponseException(ErrorCode.INVALID_REQUEST_PARAMS, data))
 
-        result.code shouldBe ErrorCode.INVALID_REQUEST_PARAMS.code
-        result.data shouldBe data
+        result.body?.code shouldBe ErrorCode.INVALID_REQUEST_PARAMS.code
+        result.body?.data shouldBe data
     }
 
     test("handleErrorResponseException returns error without data") {
         val result = handler.handleErrorResponseException(ErrorResponseException(ErrorCode.TODO_LIST_NOT_FOUND))
 
-        result.code shouldBe ErrorCode.TODO_LIST_NOT_FOUND.code
-        result.data shouldBe null
+        result.body?.code shouldBe ErrorCode.TODO_LIST_NOT_FOUND.code
+        result.body?.data shouldBe null
     }
 
     test("handleHttpMessageNotReadable returns field error for null primitive") {

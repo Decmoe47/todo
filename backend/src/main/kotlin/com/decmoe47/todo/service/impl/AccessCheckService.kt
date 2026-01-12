@@ -1,13 +1,13 @@
 package com.decmoe47.todo.service.impl
 
+import com.decmoe47.todo.annotation.ReadOnlyTransactionalService
 import com.decmoe47.todo.repository.TodoListRepository
 import com.decmoe47.todo.repository.TodoRepository
 import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.cache.get
-import org.springframework.stereotype.Service
 
-@Service
+@ReadOnlyTransactionalService
 class AccessCheckService(
     private val todoListRepository: TodoListRepository,
     private val todoRepository: TodoRepository,

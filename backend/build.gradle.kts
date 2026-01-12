@@ -26,7 +26,9 @@ dependencies {
     implementation("org.komapper:komapper-spring-boot-starter-jdbc:$komapperVersion")
     implementation("org.komapper:komapper-dialect-mysql-jdbc:$komapperVersion")
     ksp("org.komapper:komapper-processor:$komapperVersion")
-    compileOnly("com.mysql:mysql-connector-j")
+    runtimeOnly("com.mysql:mysql-connector-j")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-mysql")
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
@@ -38,7 +40,7 @@ dependencies {
     implementation("tools.jackson.module:jackson-module-kotlin:3.0.3")
 
     // dev tool
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.13")
 
     // test
@@ -50,6 +52,10 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
     testImplementation("io.kotest:kotest-property:$kotestVersion")
     testImplementation("io.mockk:mockk:1.14.2")
+    val testcontainersVersion = "2.0.3"
+    testImplementation("org.testcontainers:testcontainers:$testcontainersVersion")
+    testImplementation("org.testcontainers:testcontainers-junit-jupiter:$testcontainersVersion")
+    testImplementation("org.testcontainers:testcontainers-mysql:$testcontainersVersion")
 }
 
 kotlin {

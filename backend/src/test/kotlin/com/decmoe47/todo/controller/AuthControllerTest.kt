@@ -29,7 +29,7 @@ class AuthControllerTest : FunSpec({
         val response = UserResponse(id = 1, email = "user@test.com", name = "User")
         every { authService.login(request) } returns response
 
-        controller.login(request, null).data shouldBe response
+        controller.login(request, null).body?.data shouldBe response
 
         verify { authService.login(request) }
     }
@@ -54,7 +54,7 @@ class AuthControllerTest : FunSpec({
         val response = UserResponse(id = 2, email = "user@test.com", name = "User")
         every { authService.register(request) } returns response
 
-        controller.register(request).data shouldBe response
+        controller.register(request).body?.data shouldBe response
 
         verify { authService.register(request) }
     }
@@ -73,7 +73,7 @@ class AuthControllerTest : FunSpec({
         val tokens = AuthenticationTokensResponse(accessToken = "access", refreshToken = "refresh")
         every { authService.refreshAccessToken("refresh") } returns tokens
 
-        controller.refreshToken(request).data shouldBe tokens
+        controller.refreshToken(request).body?.data shouldBe tokens
 
         verify { authService.refreshAccessToken("refresh") }
     }

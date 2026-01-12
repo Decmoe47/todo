@@ -33,7 +33,7 @@ class TodoListControllerTest : FunSpec({
     test("getCustomTodoLists returns list") {
         every { todoListService.getCustomTodoLists() } returns listOf(response)
 
-        controller.getCustomTodoLists().data shouldBe listOf(response)
+        controller.getCustomTodoLists().body?.data shouldBe listOf(response)
 
         verify { todoListService.getCustomTodoLists() }
     }
@@ -42,7 +42,7 @@ class TodoListControllerTest : FunSpec({
         val request = TodoListAddRequest(name = "Work")
         every { todoListService.addTodoList(request) } returns response
 
-        controller.addTodoList(request).data shouldBe response
+        controller.addTodoList(request).body?.data shouldBe response
 
         verify { todoListService.addTodoList(request) }
     }
@@ -51,7 +51,7 @@ class TodoListControllerTest : FunSpec({
         val request = TodoListUpdateRequest(id = 1, name = "Work")
         every { todoListService.updateTodoList(request) } returns response
 
-        controller.updateTodoList(request).data shouldBe response
+        controller.updateTodoList(request).body?.data shouldBe response
 
         verify { todoListService.updateTodoList(request) }
     }
