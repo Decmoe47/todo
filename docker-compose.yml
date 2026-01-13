@@ -7,7 +7,7 @@ networks:
 
 services:
   backend:
-    image: ghcr.io/decmoe47/todo-backend:latest
+    image: ghcr.io/Decmoe47/todo-backend:latest
     container_name: backend
     ports:
       - "127.0.0.1:8080:8080"
@@ -37,7 +37,7 @@ services:
       - data
 
   frontend:
-    image: ghcr.io/decmoe47/todo-frontend:latest
+    image: ghcr.io/Decmoe47/todo-frontend:latest
     container_name: frontend
     ports:
       - "80:80"
