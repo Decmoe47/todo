@@ -11,8 +11,8 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_BACKEND: ${{ github.repository }}-backend
-  IMAGE_FRONTEND: ${{ github.repository }}-frontend
+  IMAGE_BACKEND: ghcr.io/decmoe47/todo-backend
+  IMAGE_FRONTEND: ghcr.io/decmoe47/todo-frontend
 
 jobs:
   build:
