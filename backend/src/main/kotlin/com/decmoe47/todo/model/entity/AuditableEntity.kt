@@ -1,0 +1,19 @@
+package com.decmoe47.todo.model.entity
+
+import com.decmoe47.todo.util.now
+import kotlinx.datetime.LocalDateTime
+import org.komapper.annotation.KomapperCreatedAt
+import org.komapper.annotation.KomapperUpdatedAt
+import org.komapper.annotation.KomapperVersion
+
+data class AuditableEntity(
+    @KomapperCreatedAt
+    override val createdAt: LocalDateTime = LocalDateTime.now,
+    override val createdBy: Long = 0,
+    @KomapperUpdatedAt
+    override val updatedAt: LocalDateTime? = null,
+    override val updatedBy: Long? = null,
+    @KomapperVersion
+    override val version: Int = 0,
+    override val deleted: Boolean = false,
+) : Auditable

@@ -4,6 +4,8 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.gradle/
+logs/
 
 # STS
 .apt_generated
@@ -76,3 +78,5 @@ log/
 *.yaml
 !docker-compose.yml
 !deploy.yml
+!application.yml
+!application-prod.yml

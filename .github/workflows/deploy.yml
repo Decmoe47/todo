@@ -1,110 +1,79 @@
-name: Build & Deploy to EC2
+name: CI Build & CD Deploy (Self-hosted)
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
 
 env:
-  IMAGE_BACKEND: decmoe47/todo-backend
-  IMAGE_FRONTEND: decmoe47/todo-frontend
-  EC2_DEPLOY_PATH: /home/ubuntu/todo
+  REGISTRY: ghcr.io
+  IMAGE_BACKEND: ${{ github.repository }}-backend
+  IMAGE_FRONTEND: ${{ github.repository }}-frontend
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
+      - name: Login to GHCR (push)
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up JDK 21 and cache maven dependencies
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-          cache: 'maven'
-          cache-dependency-path: 'backend/pom.xml'
-
-      - name: Build Spring Boot JAR
-        run: |
-          cd backend
-          mvn clean package -DskipTests
-          cd ..
-
-      - name: Build & push backend image
+      - name: Build & Push Backend
         uses: docker/build-push-action@v6
-        id: build-backend
         with:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
+          platforms: linux/amd64
           tags: |
-            ${{ env.IMAGE_BACKEND }}:latest
-            ${{ env.IMAGE_BACKEND }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
 
-      - name: Set up Node.js 22 and cache npm dependencies
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Build & push frontend image
+      - name: Build & Push Frontend
         uses: docker/build-push-action@v6
-        id: build-frontend
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: true
+          platforms: linux/amd64
           tags: |
-            ${{ env.IMAGE_FRONTEND }}:latest
-            ${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
 
-      - name: Setup SSH
+  deploy:
+    needs: build
+    runs-on: [self-hosted, ec2]
+    steps:
+      - name: Login GHCR (pull)
+        shell: bash
         run: |
-          echo "${{ secrets.EC2_KEY }}" > key.pem
-          chmod 600 key.pem
+          echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "Decmoe47" --password-stdin
 
-      - name: Copy docker-compose.yml to EC2
+      - name: Pull & Restart via docker compose
+        shell: bash
         run: |
-          # 确保目标目录存在 (-p 选项会在需要时创建父目录)
-          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "mkdir -p ${{ env.EC2_DEPLOY_PATH }}"
-          # 执行 scp 复制
-          scp -o StrictHostKeyChecking=no -i key.pem docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ env.EC2_DEPLOY_PATH }}/docker-compose.yml
-
-      - name: SSH to EC2 and deploy
-        run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            set -e # 确保命令失败时退出
-
-            # 进入目标目录
-            cd ${{ env.EC2_DEPLOY_PATH }} # 使用环境变量
-
-            # 将 GitHub Secret 的内容写入 EC2 上的文件
-            echo "${{ secrets.PROD_CONFIG_YML }}" > application-prod.yml # 写入当前目录
-            chmod 600 application-prod.yml # 保护文件权限
-
-            echo "Pulling latest images..."
-            # docker-compose 会查找当前目录下的 docker-compose.yml
-            docker-compose pull
-
-            echo "Starting services with mounted config..."
-            # 确保 docker-compose.yml 配置了 volume mount
-            docker-compose up -d --remove-orphans
-
-            echo "Deployment successful!"
-          EOF
+          set -e
+          cd /opt/todo
+          docker compose pull
+          docker compose up -d --remove-orphans
+          docker image prune -f
