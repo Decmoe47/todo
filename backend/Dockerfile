@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # -------- build stage --------
-FROM azul/zulu-openjdk:24-jdk AS build
+FROM azul/zulu-openjdk:24 AS build
 WORKDIR /app
 
 # 拷贝构建描述文件，最大化缓存
