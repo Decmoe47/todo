@@ -4,7 +4,7 @@
 FROM node:22-bookworm-slim AS build
 
 ENV VITE_API_URL=/api
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 WORKDIR /app
 
@@ -24,6 +24,8 @@ RUN npm run build
 # -------- runtime stage --------
 FROM nginx:1.27-alpine
 WORKDIR /usr/share/nginx/html
+
+ENV NODE_ENV=production
 
 # 清空默认静态文件
 RUN rm -rf ./*
