@@ -1,14 +1,30 @@
-# 使用官方的 OpenJDK 基础镜像
-FROM openjdk:21
+# syntax=docker/dockerfile:1.7
 
-# 设置工作目录
+# -------- build stage --------
+FROM azul/zulu-openjdk:24-jdk AS build
 WORKDIR /app
 
-# 将构建好的 JAR 文件复制到容器中
-COPY target/todo-backend.jar app.jar
+# 拷贝构建描述文件，最大化缓存
+COPY gradlew build.gradle.kts settings.gradle.kts gradle.properties* ./
+COPY gradle ./gradle
+RUN chmod +x ./gradlew
 
-# 暴露端口（假设 Spring Boot 使用 8080 端口）
+# 把依赖拉下来，形成缓存层
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew --no-daemon dependencies || true
+
+# 再拷贝源码
+COPY src ./src
+
+# 构建
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew --no-daemon clean bootJar
+
+# -------- runtime stage --------
+FROM azul/zulu-openjdk:24-jre
+WORKDIR /app
+COPY --from=build /app/build/libs/*.jar app.jar
+
 EXPOSE 8080
-
-# 启动命令
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -Dfile.encoding=UTF-8"
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
