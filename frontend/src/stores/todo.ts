@@ -1,96 +1,112 @@
-import { defineStore } from 'pinia'
-import type { TodoAddDTO, TodoDTO, TodoListDTO, TodoMoveDTO, TodoUpdateDTO } from '@/types/todo.ts'
 import axiosInstance from '@/libs/axios.ts'
+import type { R } from '@/types/response'
+import type { Todo, TodoAddReq, TodoList, TodoMoveReq, TodoUpdateReq } from '@/types/todo.ts'
+import { defineStore } from 'pinia'
 
 interface TodoState {
-  customTodoLists: TodoListDTO[]
+  todoLists: TodoList[]
 }
 
 export const useTodoStore = defineStore('todoList', {
   state: (): TodoState => ({
-    customTodoLists: [],
+    todoLists: [],
   }),
 
   actions: {
     /////// todo list ///////
+    async loadAllTodoLists() {
+      const res = await axiosInstance.get<R<TodoList[]>, R<TodoList[]>>('todoLists/all')
+      this.todoLists = res.data
+    },
+
+    getTodoList(listId: number): TodoList | undefined {
+      return this.todoLists.find((t) => t.id === listId)
+    },
+
     async getCustomLists() {
-      this.customTodoLists = await axiosInstance.get<TodoListDTO[], TodoListDTO[]>('todoLists/custom')
+      const res = await axiosInstance.get<R<TodoList[]>, R<TodoList[]>>('todoLists/custom')
+      this.todoLists = res.data
     },
 
-    getListName(listId: string) {
-      return this.customTodoLists.find((t) => t.id === listId)?.name ?? ''
+    getListName(listId: number): string {
+      return this.todoLists.find((t) => t.id === listId)?.name ?? ''
     },
 
-    async addList(name: string) {
-      const list = await axiosInstance.post<TodoListDTO, TodoListDTO>('todoLists/add', {
+    async addList(name: string): Promise<TodoList> {
+      const res = await axiosInstance.post<R<TodoList>, R<TodoList>>('todoLists/add', {
         name: name,
       })
-      this.customTodoLists.push(list)
-      return list
+      this.todoLists.push(res.data)
+      return res.data
     },
 
-    async updateListName(listId: string, name: string) {
-      const list = await axiosInstance.post<TodoListDTO, TodoListDTO>('todoLists/update', {
+    async updateListName(listId: number, name: string): Promise<TodoList> {
+      const res = await axiosInstance.post<R<TodoList>, R<TodoList>>('todoLists/update', {
         id: listId,
         name: name,
       })
-      const index = this.customTodoLists.findIndex((t) => t.id === listId)
+      const index = this.todoLists.findIndex((t) => t.id === listId)
       if (index !== -1) {
-        this.customTodoLists[index] = list
+        this.todoLists[index] = res.data
       }
-      return list
+      return res.data
     },
 
-    async deleteList(listId: string) {
+    async deleteList(listId: number) {
       await axiosInstance.post('todoLists/delete', {
         id: listId,
         softDeleted: false,
       })
-      this.customTodoLists = this.customTodoLists.filter((t) => t.id !== listId)
+      this.todoLists = this.todoLists.filter((t) => t.id !== listId)
     },
 
     /////// todo ///////
-    async getTodos(listId: string) {
-      return await axiosInstance.get<TodoDTO[], TodoDTO[]>('todos', {
+    async getTodos(listId: number): Promise<Todo[]> {
+      const res = await axiosInstance.get<R<Todo[]>, R<Todo[]>>('todos', {
         params: {
           listId: listId,
         },
       })
+      return res.data
     },
 
-    async addTodo(todo: TodoAddDTO) {
-      return await axiosInstance.post<TodoDTO, TodoDTO>('todos/add', todo)
+    async addTodo(todo: TodoAddReq): Promise<Todo> {
+      const res = await axiosInstance.post<R<Todo>, R<Todo>>('todos/add', todo)
+      return res.data
     },
 
-    async updateTodos(todos: TodoUpdateDTO[]) {
-      return await axiosInstance.post<TodoDTO[], TodoDTO[]>('todos/update', todos)
+    async updateTodo(todo: TodoUpdateReq): Promise<Todo> {
+      const res = await axiosInstance.post<R<Todo>, R<Todo>>('todos/update', todo)
+      return res.data
     },
 
-    async deleteTodos(todoIds: number[]) {
-      const data: { id: number; softDeleted: boolean }[] = []
-      todoIds.forEach((id) => {
-        data.push({
-          id: id,
-          softDeleted: false,
-        })
+    async deleteTodo(todoId: number) {
+      await axiosInstance.post('todos/delete', {
+        id: todoId,
+        softDeleted: false,
       })
-      await axiosInstance.post('todos/delete', data)
     },
 
-    async toggleTodo(todoId: number) {
-      return await axiosInstance.post<TodoDTO, TodoDTO>('todos/toggle', {
+    async toggleTodo(todoId: number): Promise<Todo> {
+      const res = await axiosInstance.post<R<Todo>, R<Todo>>('todos/toggle', {
         id: todoId,
       })
+      return res.data
     },
 
-    async moveTodos(todoMoveDTOs: TodoMoveDTO[]) {
-      return await axiosInstance.post<TodoDTO[], TodoDTO[]>('todos/move', todoMoveDTOs)
-    },
+    async moveTodo(todoMoveDTO: TodoMoveReq): Promise<Todo> {
+      const res = await axiosInstance.post<R<Todo>, R<Todo>>('todos/move', todoMoveDTO)
+      return res.data
+    }
   },
 
   getters: {
-    inboxListId(): string {
-      return this.customTodoLists.find((t) => t.inbox)!.id
+    inboxList(): TodoList | undefined {
+      return this.todoLists.find((list) => list.inbox)
     },
-  },
+
+    customLists(): TodoList[] {
+      return this.todoLists.filter((list) => !list.inbox)
+    }
+  }
 })

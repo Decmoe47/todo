@@ -25,14 +25,14 @@ class TodoListServiceImpl(
     private val userRepo: UserRepository,
     private val cacheManager: CacheManager,
 ) : TodoListService {
-    override fun getCustomTodoLists(): List<TodoListResponse> {
+    override fun getAll(): List<TodoListResponse> {
         val userId = SecurityUtil.getCurrentUserId()
-        val lists = todoListRepo.selectExcludingInbox(userId)
+        val lists = todoListRepo.selectAll(userId)
         return lists.map { it.toTodoListResponse() }
     }
 
     @Transactional
-    override fun addTodoList(request: TodoListAddRequest): TodoListResponse {
+    override fun add(request: TodoListAddRequest): TodoListResponse {
         val userId = SecurityUtil.getCurrentUserId()
         val user = userRepo.first(userId) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
 
@@ -44,7 +44,7 @@ class TodoListServiceImpl(
     }
 
     @Transactional
-    override fun updateTodoList(request: TodoListUpdateRequest): TodoListResponse {
+    override fun update(request: TodoListUpdateRequest): TodoListResponse {
         val todoList = todoListRepo.first(request.id)
             ?: throw ErrorResponseException(ErrorCode.TODO_LIST_NOT_FOUND)
         val updated = todoList.copy(
@@ -55,7 +55,7 @@ class TodoListServiceImpl(
     }
 
     @Transactional
-    override fun deleteTodoList(request: TodoListDeleteRequest) {
+    override fun delete(request: TodoListDeleteRequest) {
         val todos = todoRepo.select(request.id)
         val todoIds = todos.map { it.id }
 

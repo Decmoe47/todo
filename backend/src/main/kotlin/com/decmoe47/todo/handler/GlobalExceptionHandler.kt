@@ -72,8 +72,8 @@ class GlobalExceptionHandler {
 
             val errorMsg = if (cause.targetType?.isPrimitive == true
                 && cause.message?.contains("FAIL_ON_NULL_FOR_PRIMITIVES") == true
-            ) "字段 [$fieldName] 缺失或不能为 null"
-            else "字段 [$fieldName] 类型错误"
+            ) "Field [$fieldName] does not exist or is null."
+            else "Field [$fieldName] has wrong type."
 
             return ResponseEntity.badRequest().body(
                 mapOf(
@@ -83,6 +83,6 @@ class GlobalExceptionHandler {
                 )
             )
         }
-        return ResponseEntity.badRequest().body(mapOf("message" to "请求体格式错误"))
+        return ResponseEntity.badRequest().body(mapOf("message" to "The request body is invalid."))
     }
 }

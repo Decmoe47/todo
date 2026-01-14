@@ -28,6 +28,10 @@ class TokenServiceImpl(
 
     override fun generate(authentication: Authentication): AuthenticationTokensResponse {
         val user = authentication.principal as? SecurityUser ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
+        return generate(user)
+    }
+
+    override fun generate(user: SecurityUser): AuthenticationTokensResponse {
         return AuthenticationTokensResponse(
             accessToken = generateToken(user, securityProperties.accessTokenTtl),
             refreshToken = generateToken(user, securityProperties.refreshTokenTtl)

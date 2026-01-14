@@ -15,23 +15,23 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/todoLists")
 class TodoListController(private val todoListService: TodoListService) {
-    @GetMapping("/custom")
-    fun getCustomTodoLists(): ResponseEntity<Response<List<TodoListResponse>>> =
-        R.ok(todoListService.getCustomTodoLists())
+    @GetMapping("/all")
+    fun getAll(): ResponseEntity<Response<List<TodoListResponse>>> =
+        R.ok(todoListService.getAll())
 
     @PostMapping("/add")
-    fun addTodoList(@Valid @RequestBody request: TodoListAddRequest): ResponseEntity<Response<TodoListResponse>> =
-        R.ok(todoListService.addTodoList(request))
+    fun add(@Valid @RequestBody request: TodoListAddRequest): ResponseEntity<Response<TodoListResponse>> =
+        R.ok(todoListService.add(request))
 
     @PostMapping("/update")
     @PreAuthorize("@accessCheckService.ownsTodoListAccess(authentication.principal.id, #request.id)")
-    fun updateTodoList(@Valid @RequestBody request: TodoListUpdateRequest): ResponseEntity<Response<TodoListResponse>> =
-        R.ok(todoListService.updateTodoList(request))
+    fun update(@Valid @RequestBody request: TodoListUpdateRequest): ResponseEntity<Response<TodoListResponse>> =
+        R.ok(todoListService.update(request))
 
     @PostMapping("/delete")
     @PreAuthorize("@accessCheckService.ownsTodoListAccess(authentication.principal.id, #request.id)")
-    fun deleteTodoList(@Valid @RequestBody request: TodoListDeleteRequest): ResponseEntity<Response<Unit>> {
-        todoListService.deleteTodoList(request)
+    fun delete(@Valid @RequestBody request: TodoListDeleteRequest): ResponseEntity<Response<Unit>> {
+        todoListService.delete(request)
         return R.ok()
     }
 }

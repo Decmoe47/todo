@@ -1,6 +1,5 @@
 package com.decmoe47.todo.service
 
-import com.decmoe47.todo.constant.TodoConstants
 import com.decmoe47.todo.constant.enums.ErrorCode
 import com.decmoe47.todo.exception.ErrorResponseException
 import com.decmoe47.todo.model.entity.AuditableEntity
@@ -27,7 +26,6 @@ class TodoServiceImplTest : FunSpec({
     lateinit var todoRepo: TodoRepository
     lateinit var todoListRepo: TodoListRepository
     lateinit var userRepo: UserRepository
-    lateinit var inboxCacheService: InboxCacheService
     lateinit var cacheManager: CacheManager
     lateinit var service: TodoServiceImpl
 
@@ -38,14 +36,12 @@ class TodoServiceImplTest : FunSpec({
         todoRepo = mockk()
         todoListRepo = mockk()
         userRepo = mockk()
-        inboxCacheService = mockk()
         cacheManager = mockk()
 
         service = TodoServiceImpl(
             todoRepo = todoRepo,
             todoListRepo = todoListRepo,
             userRepo = userRepo,
-            inboxCacheService = inboxCacheService,
             cacheManager = cacheManager
         )
     }
@@ -64,10 +60,9 @@ class TodoServiceImplTest : FunSpec({
             auditable = AuditableEntity(createdBy = userId)
         )
 
-        every { inboxCacheService.getInboxId(userId) } returns inboxId
         every { todoRepo.select(inboxId) } returns listOf(todo)
 
-        val result = service.getTodos(TodoConstants.INBOX)
+        val result = service.getTodos(100)
 
         result.shouldHaveSize(1)
         result.first().id shouldBe 1L
@@ -80,7 +75,7 @@ class TodoServiceImplTest : FunSpec({
         val request = TodoAddRequest(
             content = "test",
             dueDate = null,
-            belongedListId = "1"
+            belongedListId = 1
         )
 
         val error = shouldThrow<ErrorResponseException> {
@@ -95,7 +90,7 @@ class TodoServiceImplTest : FunSpec({
         every { todoListRepo.first(1L) } returns null
 
         val error = shouldThrow<ErrorResponseException> {
-            service.addTodo(TodoAddRequest(content = "test", dueDate = null, belongedListId = "1"))
+            service.addTodo(TodoAddRequest(content = "test", dueDate = null, belongedListId = 1))
         }
 
         error.errorCode shouldBe ErrorCode.TODO_LIST_NOT_FOUND
@@ -116,7 +111,7 @@ class TodoServiceImplTest : FunSpec({
         every { todoListRepo.first(3L) } returns list
         every { todoRepo.save(any()) } returns saved
 
-        val result = service.addTodo(TodoAddRequest(content = "task", dueDate = null, belongedListId = "3"))
+        val result = service.addTodo(TodoAddRequest(content = "task", dueDate = null, belongedListId = 3))
 
         result.id shouldBe 9
         result.belongedListId shouldBe 3
@@ -223,7 +218,7 @@ class TodoServiceImplTest : FunSpec({
         )
 
         val error = shouldThrow<ErrorResponseException> {
-            service.moveTodo(TodoMoveRequest(id = 1, targetListId = "bad"))
+            service.moveTodo(TodoMoveRequest(id = 1, targetListId = -1))
         }
 
         error.errorCode shouldBe ErrorCode.INVALID_REQUEST_PARAMS
@@ -242,7 +237,7 @@ class TodoServiceImplTest : FunSpec({
         every { todoListRepo.first(3L) } returns null
 
         val error = shouldThrow<ErrorResponseException> {
-            service.moveTodo(TodoMoveRequest(id = 1, targetListId = "3"))
+            service.moveTodo(TodoMoveRequest(id = 1, targetListId = 999))
         }
 
         error.errorCode shouldBe ErrorCode.TODO_LIST_NOT_FOUND
@@ -266,14 +261,14 @@ class TodoServiceImplTest : FunSpec({
             auditable = AuditableEntity(createdBy = userId)
         )
 
-        val result = service.moveTodo(TodoMoveRequest(id = 1, targetListId = "5"))
+        val result = service.moveTodo(TodoMoveRequest(id = 1, targetListId = 5))
 
         result.belongedListId shouldBe 5
     }
 
     test("getTodos throws INVALID_REQUEST_PARAMS when listId is invalid") {
         val error = shouldThrow<ErrorResponseException> {
-            service.getTodos("bad")
+            service.getTodos(-1)
         }
 
         error.errorCode shouldBe ErrorCode.INVALID_REQUEST_PARAMS

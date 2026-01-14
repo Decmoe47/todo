@@ -10,7 +10,7 @@ export interface RegisterForm {
   verificationCode: string
 }
 
-export interface UserDTO {
+export interface User {
   id: number
   name: string
   email: string

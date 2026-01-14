@@ -1,7 +1,6 @@
 package com.decmoe47.todo.service.impl
 
 import com.decmoe47.todo.annotation.ReadOnlyTransactionalService
-import com.decmoe47.todo.constant.TodoConstants
 import com.decmoe47.todo.constant.enums.ErrorCode
 import com.decmoe47.todo.exception.ErrorResponseException
 import com.decmoe47.todo.model.entity.AuditableEntity
@@ -12,7 +11,6 @@ import com.decmoe47.todo.model.response.TodoResponse
 import com.decmoe47.todo.repository.TodoListRepository
 import com.decmoe47.todo.repository.TodoRepository
 import com.decmoe47.todo.repository.UserRepository
-import com.decmoe47.todo.service.InboxCacheService
 import com.decmoe47.todo.service.TodoService
 import com.decmoe47.todo.util.SecurityUtil
 import org.springframework.cache.CacheManager
@@ -23,13 +21,10 @@ class TodoServiceImpl(
     private val todoRepo: TodoRepository,
     private val todoListRepo: TodoListRepository,
     private val userRepo: UserRepository,
-    private val inboxCacheService: InboxCacheService,
     private val cacheManager: CacheManager,
 ) : TodoService {
-    override fun getTodos(listId: String): List<TodoResponse> {
-        val userId = SecurityUtil.getCurrentUserId()
-        val resolvedListId = resolveListId(listId, userId)
-        val todos = todoRepo.select(resolvedListId)
+    override fun getTodos(listId: Long): List<TodoResponse> {
+        val todos = todoRepo.select(listId)
         return todos.map { it.toTodoResponse() }
     }
 
@@ -37,8 +32,7 @@ class TodoServiceImpl(
     override fun addTodo(request: TodoAddRequest): TodoResponse {
         val userId = SecurityUtil.getCurrentUserId()
         val user = userRepo.first(userId) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
-        val listId = resolveListId(request.belongedListId, userId)
-        val todoList = todoListRepo.first(listId)
+        val todoList = todoListRepo.first(request.belongedListId)
             ?: throw ErrorResponseException(ErrorCode.TODO_LIST_NOT_FOUND)
 
         val todo = Todo(
@@ -96,8 +90,7 @@ class TodoServiceImpl(
         val todo = todoRepo.first(request.id)
             ?: throw ErrorResponseException(ErrorCode.TODO_NOT_FOUND)
 
-        val targetListId = resolveListId(request.targetListId, userId)
-        val todoList = todoListRepo.first(targetListId)
+        val todoList = todoListRepo.first(request.targetListId)
             ?: throw ErrorResponseException(ErrorCode.TODO_LIST_NOT_FOUND)
 
         val updatedTodo = todo.copy(
@@ -106,13 +99,6 @@ class TodoServiceImpl(
         )
 
         return todoRepo.update(updatedTodo).toTodoResponse()
-    }
-
-    private fun resolveListId(listId: String, userId: Long): Long {
-        if (listId == TodoConstants.INBOX) {
-            return inboxCacheService.getInboxId(userId)
-        }
-        return listId.toLongOrNull() ?: throw ErrorResponseException(ErrorCode.INVALID_REQUEST_PARAMS)
     }
 
     private fun clearCache(todoId: Long) {

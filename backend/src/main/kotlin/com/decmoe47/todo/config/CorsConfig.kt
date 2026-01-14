@@ -8,13 +8,21 @@ import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration(proxyBeanMethods = false)
-class CorsConfig(@param:Value($$"${cors.allowed-origins}") private val allowedOrigins: String) {
+class CorsConfig(
+    @param:Value($$"${cors.allowed-origins}")
+    private val allowedOrigins: String
+) {
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf(allowedOrigins)
-        configuration.allowedMethods = listOf("GET", "POST")
+
+        // 支持用逗号配置多个 origin
+        configuration.allowedOrigins =
+            allowedOrigins.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+
+        configuration.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*")
+        configuration.exposedHeaders = listOf("Location")
         configuration.allowCredentials = true
 
         val source = UrlBasedCorsConfigurationSource()

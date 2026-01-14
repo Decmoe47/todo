@@ -35,7 +35,6 @@ dependencies {
     // tool
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("com.auth0:java-jwt:4.5.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.7.1")
     implementation("tools.jackson.module:jackson-module-kotlin:3.0.3")
 

@@ -82,7 +82,7 @@ class AuthServiceImplTest : FunSpec({
         val result = service.login(UserLoginRequest(email = "user@test.com", password = "pw"))
 
         result.id shouldBe 5L
-        result.token?.accessToken shouldBe "access"
+        result.tokens?.accessToken shouldBe "access"
         verify(exactly = 1) { userRepository.save(user) }
     }
 

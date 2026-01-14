@@ -17,6 +17,7 @@ import com.decmoe47.todo.util.SecurityUtil
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.*
 import org.springframework.cache.Cache
 import org.springframework.cache.CacheManager
@@ -51,32 +52,31 @@ class TodoListServiceImplTest : FunSpec({
         unmockkObject(SecurityUtil)
     }
 
-    test("addTodoList throws USER_NOT_FOUND when user does not exist") {
+    test("add throws USER_NOT_FOUND when user does not exist") {
         every { userRepo.first(userId) } returns null
 
         val error = shouldThrow<ErrorResponseException> {
-            service.addTodoList(TodoListAddRequest(name = "Inbox"))
+            service.add(TodoListAddRequest(name = "Inbox"))
         }
 
         error.errorCode shouldBe ErrorCode.USER_NOT_FOUND
     }
 
-    test("getCustomTodoLists returns mapped lists") {
+    test("getAll returns mapped lists") {
         val list = TodoList(
-            id = 1,
+            id = 2,
             name = "Work",
             inbox = false,
             auditable = AuditableEntity(createdBy = userId)
         )
-        every { todoListRepo.selectExcludingInbox(userId) } returns listOf(list)
+        every { todoListRepo.selectAll(userId) } returns listOf(list)
 
-        val result = service.getCustomTodoLists()
+        val result = service.getAll()
 
-        result.first().id shouldBe 1L
-        result.first().name shouldBe "Work"
+        result.find { it.id == 2L && it.name == "Work" } shouldNotBe null
     }
 
-    test("addTodoList returns saved list") {
+    test("add returns saved list") {
         val user = User(id = userId, email = "u@test.com", password = "pw", name = "u")
         val saved = TodoList(
             id = 3,
@@ -87,22 +87,22 @@ class TodoListServiceImplTest : FunSpec({
         every { userRepo.first(userId) } returns user
         every { todoListRepo.save(any()) } returns saved
 
-        val result = service.addTodoList(TodoListAddRequest(name = "Inbox"))
+        val result = service.add(TodoListAddRequest(name = "Inbox"))
 
         result.id shouldBe 3L
     }
 
-    test("updateTodoList throws TODO_LIST_NOT_FOUND when list missing") {
+    test("update throws TODO_LIST_NOT_FOUND when list missing") {
         every { todoListRepo.first(4L) } returns null
 
         val error = shouldThrow<ErrorResponseException> {
-            service.updateTodoList(TodoListUpdateRequest(id = 4, name = "n"))
+            service.update(TodoListUpdateRequest(id = 4, name = "n"))
         }
 
         error.errorCode shouldBe ErrorCode.TODO_LIST_NOT_FOUND
     }
 
-    test("updateTodoList updates list name") {
+    test("update updates list name") {
         val list = TodoList(
             id = 4,
             name = "old",
@@ -113,12 +113,12 @@ class TodoListServiceImplTest : FunSpec({
         every { todoListRepo.first(4L) } returns list
         every { todoListRepo.update(any()) } returns updated
 
-        val result = service.updateTodoList(TodoListUpdateRequest(id = 4, name = "new"))
+        val result = service.update(TodoListUpdateRequest(id = 4, name = "new"))
 
         result.name shouldBe "new"
     }
 
-    test("deleteTodoList clears caches for list and todos") {
+    test("delete clears caches for list and todos") {
         val listId = 55L
         val todos = listOf(
             Todo(
@@ -145,14 +145,14 @@ class TodoListServiceImplTest : FunSpec({
         every { cacheManager.getCache("todoListAccess") } returns todoListCache
         every { cacheManager.getCache("todoAccess") } returns todoCache
 
-        service.deleteTodoList(TodoListDeleteRequest(id = listId))
+        service.delete(TodoListDeleteRequest(id = listId))
 
         verify(exactly = 1) { todoListCache.evict("${userId}_$listId") }
         verify(exactly = 1) { todoCache.evict("${userId}_1") }
         verify(exactly = 1) { todoCache.evict("${userId}_2") }
     }
 
-    test("deleteTodoList handles missing caches") {
+    test("delete handles missing caches") {
         val listId = 77L
         every { todoRepo.select(listId) } returns emptyList()
         every { todoRepo.deleteByBelongedListId(listId) } returns Unit
@@ -160,7 +160,7 @@ class TodoListServiceImplTest : FunSpec({
         every { cacheManager.getCache("todoListAccess") } returns null
         every { cacheManager.getCache("todoAccess") } returns null
 
-        service.deleteTodoList(TodoListDeleteRequest(id = listId))
+        service.delete(TodoListDeleteRequest(id = listId))
 
         verify { todoRepo.deleteByBelongedListId(listId) }
         verify { todoListRepo.delete(listId) }

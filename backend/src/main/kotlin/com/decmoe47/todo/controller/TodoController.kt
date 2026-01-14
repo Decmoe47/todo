@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/todos")
 class TodoController(private val todoService: TodoService) {
     @GetMapping
-    fun getTodos(@RequestParam listId: String): ResponseEntity<Response<List<TodoResponse>>> =
+    fun getTodos(@RequestParam listId: Long): ResponseEntity<Response<List<TodoResponse>>> =
         R.ok(todoService.getTodos(listId))
 
     @PostMapping("/add")
@@ -30,7 +30,7 @@ class TodoController(private val todoService: TodoService) {
 
     @PostMapping("/update")
     @PreAuthorize("@accessCheckService.ownsTodoAccess(authentication.principal.id, #request.id)")
-    fun updateTodos(@Valid @RequestBody request: TodoUpdateRequest): ResponseEntity<Response<TodoResponse>> =
+    fun updateTodo(@Valid @RequestBody request: TodoUpdateRequest): ResponseEntity<Response<TodoResponse>> =
         R.ok(todoService.updateTodo(request))
 
     @PostMapping("/toggle")
@@ -39,6 +39,6 @@ class TodoController(private val todoService: TodoService) {
         R.ok(todoService.toggleTodo(request))
 
     @PostMapping("/move")
-    fun moveTodos(@Valid @RequestBody request: TodoMoveRequest): ResponseEntity<Response<TodoResponse>> =
+    fun moveTodo(@Valid @RequestBody request: TodoMoveRequest): ResponseEntity<Response<TodoResponse>> =
         R.ok(todoService.moveTodo(request))
 }

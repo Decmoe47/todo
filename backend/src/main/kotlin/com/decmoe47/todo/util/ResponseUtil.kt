@@ -4,10 +4,9 @@ import com.decmoe47.todo.constant.enums.ErrorCode
 import com.decmoe47.todo.model.response.Response
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.servlet.http.HttpServletResponse
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 
@@ -17,16 +16,11 @@ fun HttpServletResponse.writeErrMsg(errCode: ErrorCode) {
     this.contentType = MediaType.APPLICATION_JSON_VALUE
     this.characterEncoding = StandardCharsets.UTF_8.name()
 
+    this.status = errCode.httpStatus.value()
+
+    val mapper = jacksonObjectMapper()
     try {
-        this.writer.use { writer ->
-            val jsonResponse = Json.encodeToString(
-                Response.serializer(
-                    serializer<ResponseEntity<Response<Unit>>>()
-                ), Response(code = errCode.code)
-            )
-            writer.print(jsonResponse)
-            writer.flush()
-        }
+        mapper.writeValue(this.writer, Response(code = errCode.code, message = errCode.message, data = null))
     } catch (e: IOException) {
         log.error(e) { "Failed to write error message to response" }
     }

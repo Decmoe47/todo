@@ -1,7 +1,8 @@
-import { ResultEnums } from '@/enums/result.enums.ts'
+import { ResultEnums } from '@/constants/enums'
 import { pinia } from '@/main.ts'
 import router from '@/router'
 import { useUserStore } from '@/stores/user.ts'
+import type { R } from '@/types/response'
 import { getAccessToken } from '@/utils/auth.ts'
 import type { InternalAxiosRequestConfig } from 'axios'
 import axios, { AxiosError } from 'axios'
@@ -10,7 +11,7 @@ import { ElMessage, ElNotification } from 'element-plus'
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
-  timeout: 5000,
+  timeout: 10000,
 })
 
 axiosInstance.interceptors.request.use(
@@ -29,54 +30,43 @@ axiosInstance.interceptors.request.use(
 )
 
 axiosInstance.interceptors.response.use(
+  // 2xx
   async (response) => {
-    switch (response.data.code as number) {
-      case ResultEnums.SUCCESS:
-        return response.data.data
-      case ResultEnums.ACCESS_TOKEN_EXPIRED:
-        // token 过期，尝试刷新
-        await handleTokenRefresh()
-        break
-      case ResultEnums.REFRESH_TOKEN_EXPIRED:
-        // refresh token 过期，需要重新登录
-        await handleSessionExpired()
-        break
-      case ResultEnums.USER_NOT_FOUND:
-        await router.push('/login')
-        break
-      default:
-        ElMessage.error(response.data.message)
-        console.error(JSON.stringify(response.data))
+    if (response.data.code === ResultEnums.SUCCESS) {
+      return response.data
+    } else {
+      ElMessage.error(response.data.message || 'Something went wrong, please try again later!')
+      console.error(JSON.stringify(response.data))
+      return Promise.reject(new Error(`${response.data.code}: ${response.data.message}`))
     }
-
-    return Promise.reject(new Error(`${response.data.code}: ${response.data.message}`))
   },
+  // 4xx, 5xx
   async (error: AxiosError) => {
-    let msg = error.message
+    let msg = 'Something went wrong, please try again later!'
     if (error.response) {
-      const status = error.response.status
-      switch (status) {
-        case 400:
-          msg = 'Invalid request body'
-          break
+      const res = error.response.data as R<any>
+      switch (error.response.status) {
         case 401:
-          msg = 'Unauthorized, please login'
-          break
-        case 403:
-          msg = 'Forbidden'
+          if (res.code === ResultEnums.ACCESS_TOKEN_EXPIRED) {
+            await handleTokenRefresh()
+          } else if (res.code === ResultEnums.REFRESH_TOKEN_EXPIRED) {
+            await handleSessionExpired()
+          } else if (res.code === ResultEnums.UNAUTHORIZED) {
+            await router.push('/login')
+          }
           break
         case 404:
-          msg = 'Not Found'
+          if (res.code === ResultEnums.USER_NOT_FOUND) {
+            await router.push('/login')
+          }
           break
-        case 500:
-          msg = 'Internal Server Error'
-          break
-        default:
-          msg = `Connection error ${status}`
       }
-    } else if (error.code === 'ECONNABORTED' && error.message.indexOf('timeout') !== -1) {
-      msg = 'Timeout'
+      msg = res.message || msg
+      console.error(JSON.stringify(res))
+    } else {
+      console.error(error)
     }
+
     ElMessage.error(msg)
     return Promise.reject(error)
   },
@@ -93,8 +83,8 @@ async function handleTokenRefresh() {
 
 async function handleSessionExpired() {
   ElNotification({
-    title: '提示',
-    message: '您的会话已过期，请重新登录',
+    title: 'Session Expired',
+    message: 'Your session has expired. Please log in again.',
     type: 'info',
   })
   useUserStore(pinia).clearSessionAndCache()

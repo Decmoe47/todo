@@ -1,41 +1,45 @@
-import type { UserDTO } from '@/types/user.ts'
 
-export interface TodoDTO extends BaseTodoDTO {
-  belongedList: TodoListDTO
-  createdBy: UserDTO
-  updatedBy: UserDTO
-  createdTime: Date
-  updatedTime: Date
-}
-
-export interface BaseTodoDTO {
+// Data interfaces
+export interface Todo {
   id: number
   content: string
   done: boolean
   dueDate?: Date
   description?: string
+
+  belongedListId: number
+  createdBy: number
+  createdAt: Date
+  updatedBy?: number
+  updatedAt?: Date
 }
 
-export interface TodoAddDTO {
+export interface TodoList {
+  id: number
+  name: string
+  inbox: boolean
+
+  createdBy: Number
+  createdAt: Date
+  updatedBy: Number
+  updatedAt: Date
+}
+
+// Request interfaces
+export interface TodoAddReq {
   content: string
   dueDate?: Date
-  belongedListId: string
+  belongedListId: number
 }
 
-export interface TodoUpdateDTO {
+export interface TodoUpdateReq {
   id: number
   content: string
   done: boolean
   dueDate?: Date
 }
 
-export interface TodoMoveDTO {
+export interface TodoMoveReq {
   id: number
-  targetListId: string
-}
-
-export interface TodoListDTO {
-  id: string
-  name: string
-  inbox: boolean
+  targetListId: number
 }

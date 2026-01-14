@@ -14,6 +14,15 @@ spring:
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
     protocol: ${MAIL_PROTOCOL}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.ssl.enable: true
+      mail.smtp.ssl.required: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+      mail.debug: true
+    test-connection: false
   data:
     redis:
       host: ${REDIS_HOST}

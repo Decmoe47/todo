@@ -26,8 +26,12 @@
       <el-form-item prop="verificationCode">
         <el-input v-model="form.verificationCode" placeholder="verification code" maxlength="4">
           <template #append>
-            <el-button @click="getVerificationCode" :disabled="verificationCodeSent">
-              {{ verificationCodeSent ? `Retry after ${timer}` : 'Get Code' }}
+            <el-button @click="getVerificationCode" :disabled="isCodeSendingOrSent" style="height: 40px; font-size: 14px; font-weight: bold;">
+              {{ 
+                verificationCodeSentStatus === VerificationCodeSentStatusEnums.SENDING ? 
+                  'Sending...' : verificationCodeSentStatus === VerificationCodeSentStatusEnums.SENT ? 
+                    `Retry after ${timer}` : 'Get Code' 
+              }}
             </el-button>
           </template>
         </el-input>
@@ -50,17 +54,21 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { VerificationCodeSentStatusEnums } from '@/constants/enums'
 import { useUserStore } from '@/stores/user.ts'
 import type { RegisterForm } from '@/types/user.ts'
+import { ElMessage } from 'element-plus'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const store = useUserStore()
 
 const timer = ref(0)
-const verificationCodeSent = ref(false)
+const verificationCodeSentStatus = ref(VerificationCodeSentStatusEnums.NOT_SEND)
+const isCodeSendingOrSent = computed(
+  () => verificationCodeSentStatus.value === VerificationCodeSentStatusEnums.SENDING || verificationCodeSentStatus.value === VerificationCodeSentStatusEnums.SENT
+)
 const form = reactive<RegisterForm>({
   name: '',
   email: '',
@@ -102,7 +110,7 @@ onMounted(() => {
     const remaining = Math.floor((parseInt(expires) - Date.now()) / 1000)
     if (remaining > 0) {
       timer.value = remaining
-      verificationCodeSent.value = true
+      verificationCodeSentStatus.value = VerificationCodeSentStatusEnums.SENT
 
       countdown()
     } else {
@@ -117,16 +125,17 @@ const getVerificationCode = async () => {
     return
   }
   try {
-    verificationCodeSent.value = true
+    verificationCodeSentStatus.value = VerificationCodeSentStatusEnums.SENDING
     timer.value = 60
     await store.sendVerificationCode(form.email)
+    verificationCodeSentStatus.value = VerificationCodeSentStatusEnums.SENT
     // 保存倒计时结束的时间戳（当前时间 + 60秒）
     localStorage.setItem('verificationCodeExpires', String(Date.now() + 60000))
     ElMessage.success('Send verification code successfully')
 
     countdown()
   } catch (e) {
-    verificationCodeSent.value = false
+    verificationCodeSentStatus.value = VerificationCodeSentStatusEnums.NOT_SEND
     console.error(e)
     ElMessage.error('Failed to send verification code. Please try again later.')
   }
@@ -138,7 +147,7 @@ function countdown() {
     timer.value--
     if (timer.value <= 0) {
       clearInterval(interval)
-      verificationCodeSent.value = false
+      verificationCodeSentStatus.value = VerificationCodeSentStatusEnums.NOT_SEND
       localStorage.removeItem('verificationCodeExpires')
     }
   }, 1000)

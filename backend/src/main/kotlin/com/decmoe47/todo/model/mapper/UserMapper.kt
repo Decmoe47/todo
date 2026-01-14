@@ -5,12 +5,12 @@ import com.decmoe47.todo.model.request.UserRegisterRequest
 import com.decmoe47.todo.model.response.AuthenticationTokensResponse
 import com.decmoe47.todo.model.response.UserResponse
 
-fun User.toUserResponse(token: AuthenticationTokensResponse? = null): UserResponse {
+fun User.toUserResponse(tokens: AuthenticationTokensResponse? = null): UserResponse {
     return UserResponse(
         id = this.id,
         email = this.email,
         name = this.name,
-        token = token
+        tokens = tokens
     )
 }
 

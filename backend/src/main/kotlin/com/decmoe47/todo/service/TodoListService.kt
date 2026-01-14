@@ -6,11 +6,11 @@ import com.decmoe47.todo.model.request.TodoListUpdateRequest
 import com.decmoe47.todo.model.response.TodoListResponse
 
 interface TodoListService {
-    fun getCustomTodoLists(): List<TodoListResponse>
+    fun getAll(): List<TodoListResponse>
 
-    fun addTodoList(request: TodoListAddRequest): TodoListResponse
+    fun add(request: TodoListAddRequest): TodoListResponse
 
-    fun updateTodoList(request: TodoListUpdateRequest): TodoListResponse
+    fun update(request: TodoListUpdateRequest): TodoListResponse
 
-    fun deleteTodoList(request: TodoListDeleteRequest)
+    fun delete(request: TodoListDeleteRequest)
 }

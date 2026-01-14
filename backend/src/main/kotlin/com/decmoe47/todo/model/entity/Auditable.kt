@@ -1,6 +1,6 @@
 package com.decmoe47.todo.model.entity
 
-import kotlinx.datetime.LocalDateTime
+import java.time.LocalDateTime
 
 interface Auditable {
     val createdAt: LocalDateTime

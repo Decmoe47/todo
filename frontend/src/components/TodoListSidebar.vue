@@ -10,7 +10,7 @@
       </el-button>
 
       <el-menu-item
-        v-for="list in todoStore.customTodoLists"
+        v-for="list in todoStore.customLists"
         :key="list.id"
         :index="`/p/${list.id}`"
         @contextmenu="(e: MouseEvent) => onContextMenu(e, list.id)"
@@ -24,10 +24,10 @@
     <div class="user-info-menu">
       <el-divider style="margin: 10px auto" />
 
-      <el-dropdown @command="handleCommand">
+      <el-dropdown v-if="userStore.user" @command="handleCommand">
         <div class="user-info-content">
           <el-avatar :size="40" icon="UserFilled" />
-          <span class="username">{{ userStore.user!.name }}</span>
+          <span class="username">{{ userStore.user?.name }}</span>
         </div>
         <template #dropdown>
           <el-dropdown-menu style="padding: 5px; border-radius: 5px">
@@ -62,20 +62,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
-import { useRouter } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { useTodoStore } from '@/stores/todo.ts'
 import ContextMenu from '@/components/ContextMenu.vue'
+import { useTodoStore } from '@/stores/todo.ts'
+import { useUserStore } from '@/stores/user'
 import type { MenuItem } from '@/types/menu.ts'
 import emitter from '@/utils/eventBus.ts'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()
 const todoStore = useTodoStore()
 
 const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
-const rightClickedListId = ref('')
+const rightClickedListId = ref(0)
 const createListModalVisible = ref(false) // 控制新建列表对话框显示
 const newListName = ref('')
 const renameModalVisible = ref(false) // 控制重命名对话框显示
@@ -86,7 +86,7 @@ const menuItems: { [key: string]: MenuItem } = {
     label: 'Rename',
     action: async () => {
       renameListNewName.value =
-        todoStore.customTodoLists.find((list) => list.id === rightClickedListId.value)?.name || ''
+        todoStore.todoLists.find((list) => list.id === rightClickedListId.value)?.name || ''
       renameModalVisible.value = true
     },
   },
@@ -99,7 +99,7 @@ const menuItems: { [key: string]: MenuItem } = {
   },
 }
 
-const onContextMenu = (e: MouseEvent, listId: string) => {
+const onContextMenu = (e: MouseEvent, listId: number) => {
   emitter.emit('hide-context-menu')
   contextMenuRef.value!.show(e)
   rightClickedListId.value = listId
@@ -134,12 +134,6 @@ const handleCommand = (command: string) => {
       break
   }
 }
-
-watchEffect(async () => {
-  if (todoStore.customTodoLists.length === 0) {
-    await todoStore.getCustomLists()
-  }
-})
 </script>
 
 <style scoped>

@@ -20,8 +20,6 @@ import com.decmoe47.todo.service.AuthService
 import com.decmoe47.todo.service.MailService
 import com.decmoe47.todo.service.TokenService
 import com.decmoe47.todo.service.VerificationCodeService
-import com.decmoe47.todo.util.now
-import kotlinx.datetime.LocalDateTime
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -29,6 +27,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 
 @ReadOnlyTransactionalService
 class AuthServiceImpl(
@@ -62,13 +61,13 @@ class AuthServiceImpl(
 
         verificationCodeService.checkCode(request.verificationCode, request.email)
 
-        val user: User = request.toUser()
-        val newUser = saveNewUser(user)
+        val tmpUser: User = request.toUser()
+        val user = saveNewUser(tmpUser)
 
-        val todoList = TodoList(name = "inbox", inbox = true, auditable = AuditableEntity(createdBy = user.id))
+        val todoList = TodoList(name = "Inbox", inbox = true, auditable = AuditableEntity(createdBy = user.id))
         todoListRepository.save(todoList)
 
-        return newUser.toUserResponse()
+        return user.toUserResponse()
     }
 
     override fun sendVerificationCode(email: String) {
@@ -97,7 +96,7 @@ class AuthServiceImpl(
                 ?: throw ErrorResponseException(ErrorCode.USERNAME_OR_PASSWORD_INCORRECT)
             val user = userRepository.first(principal.id)
                 ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
-            userRepository.update(user.copy(lastLoginTime = LocalDateTime.now))
+            userRepository.update(user.copy(lastLoginTime = LocalDateTime.now()))
 
             SecurityContextHolder.getContext().authentication = authentication
             return authentication

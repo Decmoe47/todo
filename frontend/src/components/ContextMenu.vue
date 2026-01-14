@@ -10,6 +10,7 @@
       <template v-for="(item, key) in menuItems" :key="key">
         <el-menu-item
           :class="{ 'has-children': item.children }"
+          :index="key as string"
           @mouseenter="item.children ? onItemMouseEnter($event, key as string) : null"
           @mouseleave="item.children ? onItemMouseLeave() : null"
           @click="!item.children ? handleMenuClick(item) : $event.stopPropagation()"
@@ -32,6 +33,7 @@
         <el-menu-item
           v-for="(child, idx) in currentSubMenu"
           :key="idx"
+          :index="String(idx)"
           @click="handleMenuClick(child)"
           class="side-sub-menu-item"
           :disabled="child.disabled"

@@ -6,9 +6,9 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%clr(%d{yyyy-MM-dd
-                HH:mm:ss.SSS}){faint}][%clr(%thread){magenta}][%highlight(%-5level)][%clr(%logger{36}){cyan}] %msg%n
-            </pattern>
+            <!-- @formatter:off -->
+            <pattern>[%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint}][%clr(%thread){magenta}][%highlight(%level)][%clr(%logger{36}){cyan}] %msg%n</pattern>
+            <!-- @formatter:on -->
         </encoder>
     </appender>
 

@@ -11,7 +11,7 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.datetime.LocalDateTime
+import java.time.LocalDateTime
 
 class TodoListControllerTest : FunSpec({
     val todoListService = mockk<TodoListService>()
@@ -21,7 +21,7 @@ class TodoListControllerTest : FunSpec({
         name = "Work",
         inbox = false,
         createdBy = 1,
-        createdAt = LocalDateTime(2024, 1, 1, 12, 0),
+        createdAt = LocalDateTime.of(2024, 1, 1, 12, 0),
         updatedBy = null,
         updatedAt = null
     )
@@ -31,37 +31,37 @@ class TodoListControllerTest : FunSpec({
     }
 
     test("getCustomTodoLists returns list") {
-        every { todoListService.getCustomTodoLists() } returns listOf(response)
+        every { todoListService.getAll() } returns listOf(response)
 
-        controller.getCustomTodoLists().body?.data shouldBe listOf(response)
+        controller.getAll().body?.data shouldBe listOf(response)
 
-        verify { todoListService.getCustomTodoLists() }
+        verify { todoListService.getAll() }
     }
 
     test("addTodoList returns response") {
         val request = TodoListAddRequest(name = "Work")
-        every { todoListService.addTodoList(request) } returns response
+        every { todoListService.add(request) } returns response
 
-        controller.addTodoList(request).body?.data shouldBe response
+        controller.add(request).body?.data shouldBe response
 
-        verify { todoListService.addTodoList(request) }
+        verify { todoListService.add(request) }
     }
 
     test("updateTodoList returns response") {
         val request = TodoListUpdateRequest(id = 1, name = "Work")
-        every { todoListService.updateTodoList(request) } returns response
+        every { todoListService.update(request) } returns response
 
-        controller.updateTodoList(request).body?.data shouldBe response
+        controller.update(request).body?.data shouldBe response
 
-        verify { todoListService.updateTodoList(request) }
+        verify { todoListService.update(request) }
     }
 
     test("deleteTodoList calls service") {
         val request = TodoListDeleteRequest(id = 1)
-        every { todoListService.deleteTodoList(request) } returns Unit
+        every { todoListService.delete(request) } returns Unit
 
-        controller.deleteTodoList(request)
+        controller.delete(request)
 
-        verify { todoListService.deleteTodoList(request) }
+        verify { todoListService.delete(request) }
     }
 })

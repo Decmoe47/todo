@@ -51,7 +51,7 @@ class IntegrationTest {
 
         val todoResponse = post(
             "/api/todos/add",
-            TodoAddRequest(content = "Write integration tests", dueDate = null, belongedListId = todoListId.toString()),
+            TodoAddRequest(content = "Write integration tests", dueDate = null, belongedListId = todoListId),
             todoResponseType,
             accessToken
         )
@@ -134,7 +134,7 @@ class IntegrationTest {
 
         val todo = post(
             "/api/todos/add",
-            TodoAddRequest(content = "Move me", dueDate = null, belongedListId = listAId.toString()),
+            TodoAddRequest(content = "Move me", dueDate = null, belongedListId = listAId),
             todoResponseType,
             accessToken
         )
@@ -142,7 +142,7 @@ class IntegrationTest {
 
         val moved = post(
             "/api/todos/move",
-            TodoMoveRequest(id = todoId, targetListId = listBId.toString()),
+            TodoMoveRequest(id = todoId, targetListId = listBId),
             todoResponseType,
             accessToken
         )
@@ -190,7 +190,7 @@ class IntegrationTest {
 
         val todo = post(
             "/api/todos/add",
-            TodoAddRequest(content = "Temp todo", dueDate = null, belongedListId = listId.toString()),
+            TodoAddRequest(content = "Temp todo", dueDate = null, belongedListId = listId),
             todoResponseType,
             accessToken
         )
@@ -220,7 +220,7 @@ class IntegrationTest {
             UserLoginRequest(email = "refresh-token@test.com", password = "pw123456"),
             userResponseType
         )
-        val refreshToken = requireNotNull(loginResponse.data?.token?.refreshToken)
+        val refreshToken = requireNotNull(loginResponse.data?.tokens?.refreshToken)
 
         val refreshed = post(
             "/api/auth/refresh-token",
@@ -248,7 +248,7 @@ class IntegrationTest {
         val listId = requireNotNull(list.data?.id)
         val todo = post(
             "/api/todos/add",
-            TodoAddRequest(content = "Private todo", dueDate = null, belongedListId = listId.toString()),
+            TodoAddRequest(content = "Private todo", dueDate = null, belongedListId = listId),
             todoResponseType,
             tokenA
         )
@@ -351,7 +351,7 @@ class IntegrationTest {
             userResponseType
         )
         Assertions.assertThat(loginResponse.code).isEqualTo(0)
-        val accessToken = requireNotNull(loginResponse.data?.token?.accessToken)
+        val accessToken = requireNotNull(loginResponse.data?.tokens?.accessToken)
         val userId = requireNotNull(loginResponse.data.id)
         return accessToken to userId
     }

@@ -4,7 +4,7 @@ import com.decmoe47.todo.model.request.*
 import com.decmoe47.todo.model.response.TodoResponse
 
 interface TodoService {
-    fun getTodos(listId: String): List<TodoResponse>
+    fun getTodos(listId: Long): List<TodoResponse>
 
     fun addTodo(request: TodoAddRequest): TodoResponse
 

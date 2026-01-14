@@ -34,6 +34,18 @@ nbdist/
 # VS Code
 .vscode/
 
+### Others ###
+log/
+logs/
+
+# Config files
+*.yml
+*.yaml
+!docker-compose.yml
+!deploy.yml
+!application.yml
+!application-prod.yml
+.env*
 
 
 ### Frontend ###
@@ -60,8 +72,9 @@ build/
 # debug
 npm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files
+!.env.development
+!.env.production
 
 # vercel
 .vercel
@@ -69,14 +82,3 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-### Others ###
-log/
-
-# Config files
-*.yml
-*.yaml
-!docker-compose.yml
-!deploy.yml
-!application.yml
-!application-prod.yml

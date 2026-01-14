@@ -5,7 +5,6 @@ import com.decmoe47.todo.model.entity.todoList
 import com.decmoe47.todo.repository.TodoListRepository
 import org.komapper.core.dsl.Meta
 import org.komapper.core.dsl.QueryDsl
-import org.komapper.core.dsl.query.first
 import org.komapper.core.dsl.query.firstOrNull
 import org.komapper.jdbc.JdbcDatabase
 import org.springframework.stereotype.Component
@@ -15,18 +14,10 @@ class TodoListRepositoryKomapperImpl(private val db: JdbcDatabase) : TodoListRep
 
     private val tl = Meta.todoList
 
-    override fun selectExcludingInbox(userId: Long): List<TodoList> = db.runQuery {
+    override fun selectAll(userId: Long): List<TodoList> = db.runQuery {
         QueryDsl.from(tl).where {
             tl.auditable.createdBy eq userId
-            tl.inbox eq false
         }
-    }
-
-    override fun getInbox(userId: Long): TodoList = db.runQuery {
-        QueryDsl.from(tl).where {
-            tl.auditable.createdBy eq userId
-            tl.inbox eq true
-        }.first()
     }
 
     override fun first(id: Long): TodoList? = db.runQuery {

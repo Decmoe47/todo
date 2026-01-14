@@ -5,7 +5,6 @@ import com.decmoe47.todo.constant.SecurityConstants
 import com.decmoe47.todo.constant.enums.ErrorCode
 import com.decmoe47.todo.service.TokenService
 import com.decmoe47.todo.util.writeErrMsg
-import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletException
 import jakarta.servlet.http.HttpServletRequest
@@ -16,13 +15,10 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.io.IOException
 
-private val log = KotlinLogging.logger {}
-
 @Component
 class JwtAuthenticationFilter(private val tokenService: TokenService) : OncePerRequestFilter() {
     @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
-        log.info { request.requestURI }
         if (request.requestURI in SecurityConstants.AUTH_WHITELIST) {
             chain.doFilter(request, response)
             return

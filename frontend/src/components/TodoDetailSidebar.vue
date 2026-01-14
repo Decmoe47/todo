@@ -22,7 +22,7 @@
           v-model="editableTodo.dueDate"
           type="datetime"
           format="YYYY-MM-DD HH:mm"
-          value-format="YYYY-MM-DDTHH:mm"
+          value-format="YYYY-MM-DDTHH:mm:ss"
           placeholder="Add due date"
           @blur="updateTodo"
           style="width: 100%"
@@ -47,24 +47,29 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
-import type { BaseTodoDTO } from '@/types/todo.ts'
+import { useUserStore } from '@/stores/user';
+import type { Todo } from '@/types/todo.ts';
+import { reactive, watch } from 'vue';
 
-const props = defineProps<{ todo: BaseTodoDTO | null }>()
+const userStore = useUserStore();
+const props = defineProps<{ todo: Todo | null }>()
 const emit = defineEmits<{
   close: []
   toggleTodo: [todoId: number]
-  updateTodo: [todo: BaseTodoDTO]
+  updateTodo: [todo: Todo]
 }>()
 
-const defaultTodo: BaseTodoDTO = {
+const defaultTodo: Todo = {
   id: -1,
   content: '',
   done: false,
+  belongedListId: 0,
+  createdBy: userStore.userId || 0,
+  createdAt: new Date()
 }
 
 // 本地编辑状态
-const editableTodo = reactive<BaseTodoDTO>(props.todo ? { ...props.todo } : { ...defaultTodo })
+const editableTodo = reactive<Todo>(props.todo ? { ...props.todo } : { ...defaultTodo })
 
 // 当props.todo变化时更新本地状态
 watch(

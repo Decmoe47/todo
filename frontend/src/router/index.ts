@@ -1,7 +1,8 @@
+import { useTodoStore } from '@/stores/todo'
+import { useUserStore } from '@/stores/user.ts'
 import { getAccessToken } from '@/utils/auth.ts'
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores/user.ts'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -41,9 +42,13 @@ const authWhiteList = ['/login', '/register', '/logout']
 router.beforeEach(async (to, from, next) => {
   const isLogin = !!getAccessToken()
   const userStore = useUserStore()
+  const todoStore = useTodoStore()
 
   if (isLogin && !userStore.user) {
     await userStore.getUser()
+  }
+  if (isLogin && to.meta.requiresAuth && todoStore.todoLists.length === 0) {
+    await todoStore.loadAllTodoLists()
   }
 
   if (isLogin) {

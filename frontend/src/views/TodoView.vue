@@ -51,63 +51,49 @@
 </template>
 
 <script setup lang="ts">
-import { useTodoStore } from '@/stores/todo.ts'
-import { useUserStore } from '@/stores/user.ts'
-import type { BaseTodoDTO, TodoDTO } from '@/types/todo.ts'
-import { computed, ref, watch, watchEffect } from 'vue'
-import { useRoute } from 'vue-router'
 import ContextMenu from '@/components/ContextMenu.vue'
 import TodoDetailSidebar from '@/components/TodoDetailSidebar.vue'
+import { useTodoStore } from '@/stores/todo.ts'
+import { useUserStore } from '@/stores/user.ts'
 import type { MenuItems } from '@/types/menu.ts'
+import type { Todo } from '@/types/todo.ts'
 import emitter from '@/utils/eventBus.ts'
+import { computed, ref, watch, watchEffect } from 'vue'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const userStore = useUserStore()
 const todoStore = useTodoStore()
 const listName = ref('')
-const todos = ref<TodoDTO[]>([])
+const todos = ref<Todo[]>([])
 const newTodoContent = ref('')
 const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
 const rightClickedTodoId = ref(0)
-const listId = computed(() => route.params.listId as string)
-const selectedTodo = ref<TodoDTO | null>(null)
+const listId = computed(() =>
+  route.params.listId === 'inbox' ? todoStore.inboxList?.id : Number(route.params.listId),
+)
+const selectedTodo = ref<Todo | null>(null)
 const isSidebarOpen = ref(false)
 
 const menuItems = computed<MenuItems>(() => ({
   move: {
     label: 'Move to',
     children: {
-      inbox: {
-        label: 'Inbox',
-        action: async () => {
-          await todoStore.moveTodos([
-            {
-              id: rightClickedTodoId.value,
-              targetListId: 'inbox',
-            },
-          ])
-          todos.value = todos.value.filter((t) => t.id !== rightClickedTodoId.value)
-        },
-        disabled: (() => {
-          const todo = todos.value.find((t) => t.id === rightClickedTodoId.value)
-          return todo && todo.belongedList.inbox
-        })(),
-      },
-      ...todoStore.customTodoLists.reduce((acc: MenuItems, list) => {
+      ...todoStore.todoLists.reduce((acc: MenuItems, list) => {
         acc[list.id] = {
           label: list.name,
           action: async () => {
-            await todoStore.moveTodos([
+            await todoStore.moveTodo(
               {
                 id: rightClickedTodoId.value,
                 targetListId: list.id,
               },
-            ])
+            )
             todos.value = todos.value.filter((t) => t.id !== rightClickedTodoId.value)
           },
           disabled: (() => {
             const todo = todos.value.find((t) => t.id === rightClickedTodoId.value)
-            return todo && todo.belongedList.id === list.id
+            return todo && todo.belongedListId === list.id
           })(),
         }
         return acc
@@ -117,7 +103,7 @@ const menuItems = computed<MenuItems>(() => ({
   delete: {
     label: 'Delete',
     action: async () => {
-      await todoStore.deleteTodos([rightClickedTodoId.value])
+      await todoStore.deleteTodo(rightClickedTodoId.value)
       todos.value = todos.value.filter((todo) => todo.id !== rightClickedTodoId.value)
     },
   },
@@ -130,6 +116,7 @@ const onContextMenu = (e: MouseEvent, todoId: number) => {
 }
 
 const addTodo = async () => {
+  if (listId.value == null) return
   const todoDTO = await todoStore.addTodo({
     content: newTodoContent.value,
     belongedListId: listId.value,
@@ -143,14 +130,14 @@ const toggleTodo = async (id: number) => {
   todos.value = todos.value.map((todo) => (todo.id === id ? todoDTO : todo))
 }
 
-const updateTodo = async (todo: BaseTodoDTO) => {
-  const newTodos = await todoStore.updateTodos([todo])
-  if (!newTodos) return
-  todos.value = todos.value.map((t) => (t.id === newTodos[0].id ? newTodos[0] : t))
+const updateTodo = async (todo: Todo) => {
+  const newTodo = await todoStore.updateTodo(todo)
+  if (!newTodo) return
+  todos.value = todos.value.map((t) => (t.id === newTodo.id ? newTodo : t))
 }
 
 // 点击 todo 打开侧边栏
-const openDetail = (todo: TodoDTO) => {
+const openDetail = (todo: Todo) => {
   selectedTodo.value = todo
   isSidebarOpen.value = true
 }
@@ -159,8 +146,9 @@ const closeSidebar = () => (isSidebarOpen.value = false)
 
 watchEffect(async () => {
   if (!userStore.userId) return
+  if (listId.value == null) return
 
-  if (listId.value === 'inbox') {
+  if (route.params.listId === 'inbox') {
     listName.value = 'Inbox'
   } else {
     listName.value = todoStore.getListName(listId.value)

@@ -12,6 +12,7 @@ import com.decmoe47.todo.repository.UserRepository
 import com.decmoe47.todo.service.TokenService
 import com.decmoe47.todo.service.UserService
 import com.decmoe47.todo.service.VerificationCodeService
+import com.decmoe47.todo.util.toSecurityUser
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.transaction.annotation.Transactional
 import java.net.URLDecoder
@@ -69,12 +70,13 @@ class UserServiceImpl(
         val principal = tokenService.parse(normalizedToken).principal as? SecurityUser
             ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
         val user = userRepository.first(principal.id) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
-        return user.toUserResponse()
+        val tokens = tokenService.generate(user.toSecurityUser())
+        return user.toUserResponse(tokens)
     }
 
     override fun loadUserByUsername(email: String): UserDetails {
         val user = userRepository.firstByEmail(email) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)
-        return SecurityUser(id = user.id, email = user.email, password = user.password)
+        return user.toSecurityUser()
     }
 
     private fun normalizeToken(token: String): String =

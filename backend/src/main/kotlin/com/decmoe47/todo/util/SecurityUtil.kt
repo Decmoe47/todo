@@ -19,3 +19,11 @@ object SecurityUtil {
         }
     }
 }
+
+fun User.toSecurityUser(): SecurityUser {
+    return SecurityUser(
+        id = id,
+        email = email,
+        password = password,
+    )
+}

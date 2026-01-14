@@ -3,7 +3,7 @@ package com.decmoe47.todo.model.request
 import com.fasterxml.jackson.annotation.JsonFormat
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
-import kotlinx.datetime.LocalDateTime
+import java.time.LocalDateTime
 
 data class TodoUpdateRequest(
     @field:NotNull
@@ -15,7 +15,7 @@ data class TodoUpdateRequest(
     @field:NotNull
     val done: Boolean,
 
-    @field:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    @field:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     val dueDate: LocalDateTime?,
 
     val description: String?,

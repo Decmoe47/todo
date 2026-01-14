@@ -1,42 +1,45 @@
-import { defineStore } from 'pinia'
 import axiosInstance from '@/libs/axios.ts'
-import type { AuthenticationTokens, LoginForm, RegisterForm, UserDTO } from '@/types/user.ts'
+import type { R } from '@/types/response'
+import type { AuthenticationTokens, LoginForm, RegisterForm, User } from '@/types/user.ts'
 import { clearToken, getAccessToken, getRefreshToken, setAccessToken, setRefreshToken } from '@/utils/auth.ts'
+import { defineStore } from 'pinia'
 
 interface UserState {
-  user?: UserDTO
+  user?: User
 }
 
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({}),
 
   actions: {
-    async login(form: LoginForm) {
-      const user = await axiosInstance.post<UserDTO, UserDTO>('auth/login', form)
-      this.user = user
+    async login(form: LoginForm): Promise<User> {
+      const res = await axiosInstance.post<R<User>, R<User>>('auth/login', form)
+      this.user = res.data
 
-      setAccessToken(user.tokens.accessToken)
-      setRefreshToken(user.tokens.refreshToken)
+      setAccessToken(this.user.tokens.accessToken)
+      setRefreshToken(this.user.tokens.refreshToken)
 
-      return user
+      return this.user
     },
 
-    async register(form: RegisterForm) {
-      return await axiosInstance.post<UserDTO, UserDTO>('auth/register', form)
+    async register(form: RegisterForm): Promise<User> {
+      const res = await axiosInstance.post<R<User>, R<User>>('auth/register', form)
+      return res.data
     },
 
     async refreshToken() {
       const refreshToken = getRefreshToken()
-      const tokens = await axiosInstance.post<AuthenticationTokens, AuthenticationTokens>('auth/refresh-token', {
+      const res = await axiosInstance.post<R<AuthenticationTokens>, R<AuthenticationTokens>>('auth/refresh-token', {
         refreshToken: refreshToken,
       })
+      const tokens = res.data
 
       setAccessToken(tokens.accessToken)
       setRefreshToken(tokens.refreshToken)
     },
 
     async sendVerificationCode(email: string) {
-      return await axiosInstance.post<void, void>('auth/send-verify-code', { email: email })
+      await axiosInstance.post<R<null>, R<null>>('auth/send-verify-code', { email: email }, { timeout: 20000 })
     },
 
     async logout() {
@@ -44,12 +47,12 @@ export const useUserStore = defineStore('user', {
       this.clearSessionAndCache()
     },
 
-    async getUser() {
-      const userDTO = await axiosInstance.get<UserDTO, UserDTO>('users/by-token', {
+    async getUser(): Promise<User> {
+      const res = await axiosInstance.get<R<User>, R<User>>('users/by-token', {
         params: { token: getAccessToken() },
       })
-      this.user = userDTO
-      return userDTO
+      this.user = res.data
+      return this.user
     },
 
     clearSessionAndCache() {
@@ -57,7 +60,7 @@ export const useUserStore = defineStore('user', {
       this.user = undefined
     },
 
-    setUser(user: UserDTO) {
+    setUser(user: User) {
       this.user = user
     },
   },

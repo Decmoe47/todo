@@ -2,15 +2,16 @@ package com.decmoe47.todo.model.request
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import jakarta.validation.constraints.NotBlank
-import kotlinx.datetime.LocalDateTime
+import jakarta.validation.constraints.NotNull
+import java.time.LocalDateTime
 
 data class TodoAddRequest(
     @field:NotBlank
     val content: String,
 
-    @field:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    @field:JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     val dueDate: LocalDateTime?,
 
-    @field:NotBlank
-    val belongedListId: String,
+    @field:NotNull
+    val belongedListId: Long,
 )

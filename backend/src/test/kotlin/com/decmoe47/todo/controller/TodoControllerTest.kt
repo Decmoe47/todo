@@ -9,7 +9,7 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.datetime.LocalDateTime
+import java.time.LocalDateTime
 
 class TodoControllerTest : FunSpec({
     val todoService = mockk<TodoService>()
@@ -17,12 +17,12 @@ class TodoControllerTest : FunSpec({
     val response = TodoResponse(
         id = 1,
         content = "todo",
-        dueDate = LocalDateTime(2024, 1, 1, 12, 0),
+        dueDate = LocalDateTime.of(2024, 1, 1, 12, 0),
         done = false,
         description = null,
         belongedListId = 2,
         createdBy = 1,
-        createdAt = LocalDateTime(2024, 1, 1, 12, 0),
+        createdAt = LocalDateTime.of(2024, 1, 1, 12, 0),
         updatedBy = null,
         updatedAt = null
     )
@@ -32,15 +32,15 @@ class TodoControllerTest : FunSpec({
     }
 
     test("getTodos returns list") {
-        every { todoService.getTodos("2") } returns listOf(response)
+        every { todoService.getTodos(2) } returns listOf(response)
 
-        controller.getTodos("2").body?.data shouldBe listOf(response)
+        controller.getTodos(2).body?.data shouldBe listOf(response)
 
-        verify { todoService.getTodos("2") }
+        verify { todoService.getTodos(2) }
     }
 
     test("addTodo returns response") {
-        val request = TodoAddRequest(content = "todo", dueDate = null, belongedListId = "2")
+        val request = TodoAddRequest(content = "todo", dueDate = null, belongedListId = 2)
         every { todoService.addTodo(request) } returns response
 
         controller.addTodo(request).body?.data shouldBe response
@@ -67,7 +67,7 @@ class TodoControllerTest : FunSpec({
         )
         every { todoService.updateTodo(request) } returns response
 
-        controller.updateTodos(request).body?.data shouldBe response
+        controller.updateTodo(request).body?.data shouldBe response
 
         verify { todoService.updateTodo(request) }
     }
@@ -82,10 +82,10 @@ class TodoControllerTest : FunSpec({
     }
 
     test("moveTodos returns response") {
-        val request = TodoMoveRequest(id = 1, targetListId = "9")
+        val request = TodoMoveRequest(id = 1, targetListId = 9)
         every { todoService.moveTodo(request) } returns response
 
-        controller.moveTodos(request).body?.data shouldBe response
+        controller.moveTodo(request).body?.data shouldBe response
 
         verify { todoService.moveTodo(request) }
     }

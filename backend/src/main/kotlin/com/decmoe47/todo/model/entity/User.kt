@@ -1,10 +1,10 @@
 package com.decmoe47.todo.model.entity
 
-import kotlinx.datetime.LocalDateTime
 import org.komapper.annotation.KomapperAutoIncrement
 import org.komapper.annotation.KomapperEmbedded
 import org.komapper.annotation.KomapperEntity
 import org.komapper.annotation.KomapperId
+import java.time.LocalDateTime
 
 @KomapperEntity
 data class User(

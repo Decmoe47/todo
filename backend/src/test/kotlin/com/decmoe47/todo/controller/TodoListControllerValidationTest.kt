@@ -39,7 +39,7 @@ class TodoListControllerValidationTest : FunSpec({
             status { isBadRequest() }
         }
 
-        verify(exactly = 0) { todoListService.addTodoList(any()) }
+        verify(exactly = 0) { todoListService.add(any()) }
     }
 
     test("updateTodoList returns 400 when request body violates validation") {
@@ -55,7 +55,7 @@ class TodoListControllerValidationTest : FunSpec({
             status { isBadRequest() }
         }
 
-        verify(exactly = 0) { todoListService.updateTodoList(any()) }
+        verify(exactly = 0) { todoListService.update(any()) }
     }
 
     test("deleteTodoList returns 400 when request body violates validation") {
@@ -70,6 +70,6 @@ class TodoListControllerValidationTest : FunSpec({
             status { isBadRequest() }
         }
 
-        verify(exactly = 0) { todoListService.deleteTodoList(any()) }
+        verify(exactly = 0) { todoListService.delete(any()) }
     }
 })

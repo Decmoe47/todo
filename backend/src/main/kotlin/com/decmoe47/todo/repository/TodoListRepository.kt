@@ -3,9 +3,7 @@ package com.decmoe47.todo.repository
 import com.decmoe47.todo.model.entity.TodoList
 
 interface TodoListRepository {
-    fun selectExcludingInbox(userId: Long): List<TodoList>
-
-    fun getInbox(userId: Long): TodoList
+    fun selectAll(userId: Long): List<TodoList>
 
     fun first(id: Long): TodoList?
 
