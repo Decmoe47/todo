@@ -34,7 +34,7 @@ RUN rm -rf ./*
 COPY --from=build /app/dist ./
 
 # 复制自定义 nginx 配置
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
