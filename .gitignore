@@ -43,6 +43,7 @@ logs/
 *.yaml
 !docker-compose.yml
 !deploy.yml
+!test.yml
 !application.yml
 !application-prod.yml
 .env*
