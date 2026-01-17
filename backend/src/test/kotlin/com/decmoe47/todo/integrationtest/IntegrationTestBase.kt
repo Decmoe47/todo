@@ -26,7 +26,7 @@ import org.testcontainers.mysql.MySQLContainer
 import org.testcontainers.utility.DockerImageName
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("dev")
+@ActiveProfiles("test")
 @Import(TestMailConfig::class)
 @Testcontainers
 abstract class IntegrationTestBase {

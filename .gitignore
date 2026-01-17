@@ -37,6 +37,7 @@ nbdist/
 ### Others ###
 log/
 logs/
+.kotlin/
 
 # Config files
 *.yml
@@ -46,6 +47,7 @@ logs/
 !test.yml
 !application.yml
 !application-prod.yml
+!application-test.yml
 .env*
 
 
