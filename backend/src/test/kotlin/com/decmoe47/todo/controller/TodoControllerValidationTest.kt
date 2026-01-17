@@ -40,7 +40,7 @@ class TodoControllerValidationTest : FunSpec({
     test("moveTodo returns 400 when request body violates validation") {
         val payload = mapOf(
             "id" to 1,
-            "targetListId" to ""
+            "targetListId" to -1
         )
 
         mockMvc.post("/api/todos/move") {

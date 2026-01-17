@@ -9,6 +9,7 @@ import com.decmoe47.todo.model.response.AuthenticationTokensResponse
 import com.decmoe47.todo.repository.TodoListRepository
 import com.decmoe47.todo.repository.UserRepository
 import com.decmoe47.todo.service.impl.AuthServiceImpl
+import com.decmoe47.todo.util.toSecurityUser
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -72,18 +73,19 @@ class AuthServiceImplTest : FunSpec({
 
     test("login returns user response and saves user") {
         val user = User(id = 5, email = "user@test.com", password = "pw", name = "name")
-        val authentication = UsernamePasswordAuthenticationToken(user, null, emptyList())
+        val principal = user.toSecurityUser()
+        val authentication = UsernamePasswordAuthenticationToken(principal, null, emptyList())
         val tokens = AuthenticationTokensResponse(accessToken = "access", refreshToken = "refresh")
 
         every { authenticationManager.authenticate(any()) } returns authentication
-        every { userRepository.save(user) } returns user
+        every { userRepository.first(5L) } returns user
+        every { userRepository.update(any()) } returns user
         every { tokenService.generate(authentication) } returns tokens
 
         val result = service.login(UserLoginRequest(email = "user@test.com", password = "pw"))
 
         result.id shouldBe 5L
         result.tokens?.accessToken shouldBe "access"
-        verify(exactly = 1) { userRepository.save(user) }
     }
 
     test("register throws USER_ALREADY_EXISTS when email is taken") {

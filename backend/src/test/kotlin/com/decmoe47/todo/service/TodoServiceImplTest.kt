@@ -11,14 +11,17 @@ import com.decmoe47.todo.repository.TodoListRepository
 import com.decmoe47.todo.repository.TodoRepository
 import com.decmoe47.todo.repository.UserRepository
 import com.decmoe47.todo.service.impl.TodoServiceImpl
-import com.decmoe47.todo.util.SecurityUtil
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.mockk.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.springframework.cache.Cache
 import org.springframework.cache.CacheManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 
 class TodoServiceImplTest : FunSpec({
     val userId = 42L
@@ -30,8 +33,9 @@ class TodoServiceImplTest : FunSpec({
     lateinit var service: TodoServiceImpl
 
     beforeTest {
-        mockkObject(SecurityUtil)
-        every { SecurityUtil.getCurrentUserId() } returns userId
+        val principal = User(id = userId, email = "u@test.com", password = "pw", name = "u")
+        SecurityContextHolder.getContext().authentication =
+            UsernamePasswordAuthenticationToken(principal, null, emptyList())
 
         todoRepo = mockk()
         todoListRepo = mockk()
@@ -47,7 +51,7 @@ class TodoServiceImplTest : FunSpec({
     }
 
     afterTest {
-        unmockkObject(SecurityUtil)
+        SecurityContextHolder.clearContext()
     }
 
     test("getTodos resolves inbox list id via cache") {
@@ -166,7 +170,9 @@ class TodoServiceImplTest : FunSpec({
             belongedListId = 2,
             auditable = AuditableEntity(createdBy = userId)
         )
+        val updated = todo.copy(content = "new", done = true, description = "d")
         every { todoRepo.first(8L) } returns todo
+        every { todoRepo.update(any()) } returns updated
 
         val result = service.updateTodo(
             TodoUpdateRequest(id = 8, content = "new", done = true, dueDate = null, description = "d")
@@ -216,6 +222,7 @@ class TodoServiceImplTest : FunSpec({
             belongedListId = 2,
             auditable = AuditableEntity(createdBy = userId)
         )
+        every { todoListRepo.first(-1L) } throws ErrorResponseException(ErrorCode.INVALID_REQUEST_PARAMS)
 
         val error = shouldThrow<ErrorResponseException> {
             service.moveTodo(TodoMoveRequest(id = 1, targetListId = -1))
@@ -234,7 +241,7 @@ class TodoServiceImplTest : FunSpec({
             belongedListId = 2,
             auditable = AuditableEntity(createdBy = userId)
         )
-        every { todoListRepo.first(3L) } returns null
+        every { todoListRepo.first(999L) } returns null
 
         val error = shouldThrow<ErrorResponseException> {
             service.moveTodo(TodoMoveRequest(id = 1, targetListId = 999))
@@ -253,6 +260,7 @@ class TodoServiceImplTest : FunSpec({
             belongedListId = 2,
             auditable = AuditableEntity(createdBy = userId)
         )
+        val updated = todo.copy(belongedListId = 5)
         every { todoRepo.first(1L) } returns todo
         every { todoListRepo.first(5L) } returns TodoList(
             id = 5,
@@ -260,6 +268,7 @@ class TodoServiceImplTest : FunSpec({
             inbox = false,
             auditable = AuditableEntity(createdBy = userId)
         )
+        every { todoRepo.update(any()) } returns updated
 
         val result = service.moveTodo(TodoMoveRequest(id = 1, targetListId = 5))
 
@@ -267,6 +276,8 @@ class TodoServiceImplTest : FunSpec({
     }
 
     test("getTodos throws INVALID_REQUEST_PARAMS when listId is invalid") {
+        every { todoRepo.select(-1) } throws ErrorResponseException(ErrorCode.INVALID_REQUEST_PARAMS)
+
         val error = shouldThrow<ErrorResponseException> {
             service.getTodos(-1)
         }

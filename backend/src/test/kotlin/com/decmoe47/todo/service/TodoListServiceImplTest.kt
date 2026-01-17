@@ -13,7 +13,6 @@ import com.decmoe47.todo.repository.TodoListRepository
 import com.decmoe47.todo.repository.TodoRepository
 import com.decmoe47.todo.repository.UserRepository
 import com.decmoe47.todo.service.impl.TodoListServiceImpl
-import com.decmoe47.todo.util.SecurityUtil
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -21,6 +20,8 @@ import io.kotest.matchers.shouldNotBe
 import io.mockk.*
 import org.springframework.cache.Cache
 import org.springframework.cache.CacheManager
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.context.SecurityContextHolder
 
 class TodoListServiceImplTest : FunSpec({
     val userId = 7L
@@ -32,8 +33,9 @@ class TodoListServiceImplTest : FunSpec({
     lateinit var service: TodoListServiceImpl
 
     beforeTest {
-        mockkObject(SecurityUtil)
-        every { SecurityUtil.getCurrentUserId() } returns userId
+        val principal = User(id = userId, email = "u@test.com", password = "pw", name = "u")
+        SecurityContextHolder.getContext().authentication =
+            UsernamePasswordAuthenticationToken(principal, null, emptyList())
 
         todoListRepo = mockk()
         todoRepo = mockk()
@@ -49,7 +51,7 @@ class TodoListServiceImplTest : FunSpec({
     }
 
     afterTest {
-        unmockkObject(SecurityUtil)
+        SecurityContextHolder.clearContext()
     }
 
     test("add throws USER_NOT_FOUND when user does not exist") {

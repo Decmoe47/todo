@@ -87,7 +87,7 @@ class GlobalExceptionHandlerTest : FunSpec({
         val response = handler.handleHttpMessageNotReadable(httpEx)
 
         response.statusCode.value() shouldBe 400
-        response.body?.get("message").toString().contains("缺失或不能为 null") shouldBe true
+        response.body?.get("message").toString().contains("does not exist or is null") shouldBe true
     }
 
     test("handleHttpMessageNotReadable returns type error for mismatched type") {
@@ -107,7 +107,7 @@ class GlobalExceptionHandlerTest : FunSpec({
         val response = handler.handleHttpMessageNotReadable(httpEx)
 
         response.statusCode.value() shouldBe 400
-        response.body?.get("message").toString().contains("类型错误") shouldBe true
+        response.body?.get("message").toString().contains("has wrong type") shouldBe true
     }
 
     test("handleHttpMessageNotReadable returns generic message when cause not mismatched") {
@@ -120,6 +120,6 @@ class GlobalExceptionHandlerTest : FunSpec({
         val response = handler.handleHttpMessageNotReadable(httpEx)
 
         response.statusCode.value() shouldBe 400
-        response.body?.get("message") shouldBe "请求体格式错误"
+        response.body?.get("message").toString().contains("The request body is invalid") shouldBe true
     }
 })

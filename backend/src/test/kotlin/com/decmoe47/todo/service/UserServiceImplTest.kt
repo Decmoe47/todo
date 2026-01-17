@@ -6,6 +6,7 @@ import com.decmoe47.todo.model.dto.SecurityUser
 import com.decmoe47.todo.model.entity.User
 import com.decmoe47.todo.model.request.UserSearchRequest
 import com.decmoe47.todo.model.request.UserUpdateRequest
+import com.decmoe47.todo.model.response.AuthenticationTokensResponse
 import com.decmoe47.todo.repository.UserRepository
 import com.decmoe47.todo.service.impl.UserServiceImpl
 import io.kotest.assertions.throwables.shouldThrow
@@ -204,6 +205,7 @@ class UserServiceImplTest : FunSpec({
         every { tokenService.isValid("good") } returns true
         every { tokenService.parse("good") } returns authentication
         every { userRepository.first(2L) } returns user
+        every { tokenService.generate(any<SecurityUser>()) } returns AuthenticationTokensResponse("access", "refresh")
 
         val result = service.getUserByToken("good")
 
