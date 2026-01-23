@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ErrorCode.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.constant.enums</a> &gt; <span class="el_source">ErrorCode.kt</span></div><h1>ErrorCode.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.constant.enums
+
+import org.springframework.http.HttpStatus
+
+<span class="fc" id="L5">enum class ErrorCode(val httpStatus: HttpStatus, val code: Int, val message: String) {</span>
+    // ===== 系统 =====
+<span class="fc" id="L7">    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 10000, &quot;Internal server error.&quot;),</span>
+
+<span class="fc" id="L9">    NO_QUERY_PARAM_PROVIDED(HttpStatus.BAD_REQUEST, 10001, &quot;No query parameters provided.&quot;),</span>
+<span class="fc" id="L10">    NO_BODY_PARAM_PROVIDED(HttpStatus.BAD_REQUEST, 10002, &quot;No parameters provided in the request body.&quot;),</span>
+<span class="fc" id="L11">    INVALID_REQUEST_PARAMS(HttpStatus.BAD_REQUEST, 10003, &quot;Invalid request parameters.&quot;),</span>
+<span class="fc" id="L12">    ACCESS_DENIED(HttpStatus.FORBIDDEN, 10004, &quot;Access denied.&quot;),</span>
+
+    // ===== 认证 =====
+<span class="fc" id="L15">    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, 10100, &quot;You are not logged in. Please log in and try again.&quot;),</span>
+<span class="fc" id="L16">    ACCESS_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, 10101, &quot;Your session has expired. Please log in again.&quot;),</span>
+<span class="fc" id="L17">    REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, 10102, &quot;Your session has expired. Please log in again.&quot;),</span>
+<span class="fc" id="L18">    USERNAME_OR_PASSWORD_INCORRECT(HttpStatus.UNAUTHORIZED, 10103, &quot;Incorrect username or password.&quot;),</span>
+
+    // ===== 验证码 =====
+<span class="fc" id="L21">    VERIFICATION_CODE_SEND_FAILED(</span>
+<span class="fc" id="L22">        HttpStatus.SERVICE_UNAVAILABLE,</span>
+<span class="fc" id="L23">        10200,</span>
+<span class="fc" id="L24">        &quot;Failed to send verification code. Please try again.&quot;</span>
+    ),
+<span class="fc" id="L26">    VERIFICATION_CODE_EXPIRED(</span>
+<span class="fc" id="L27">        HttpStatus.UNPROCESSABLE_ENTITY,</span>
+<span class="fc" id="L28">        10201,</span>
+<span class="fc" id="L29">        &quot;Verification code expired. Please request a new one.&quot;</span>
+    ),
+<span class="fc" id="L31">    VERIFICATION_CODE_INCORRECT(HttpStatus.UNPROCESSABLE_ENTITY, 10202, &quot;Incorrect verification code.&quot;),</span>
+
+    // ===== 权限 =====
+<span class="fc" id="L34">    PERMISSION_DENIED(HttpStatus.FORBIDDEN, 10300, &quot;You do not have permission to perform this operation.&quot;),</span>
+
+    // ===== 用户 =====
+<span class="fc" id="L37">    USER_NOT_FOUND(HttpStatus.NOT_FOUND, 10400, &quot;User not found.&quot;),</span>
+<span class="fc" id="L38">    USER_ALREADY_EXISTS(HttpStatus.CONFLICT, 10401, &quot;User already exists.&quot;),</span>
+
+    // ===== Todo =====
+<span class="fc" id="L41">    TODO_NOT_FOUND(HttpStatus.NOT_FOUND, 10500, &quot;Todo not found or has been deleted.&quot;),</span>
+<span class="fc" id="L42">    TODO_LIST_NOT_FOUND(HttpStatus.NOT_FOUND, 10501, &quot;Todo list not found.&quot;);</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

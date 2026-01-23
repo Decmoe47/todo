@@ -7,6 +7,8 @@ plugins {
     id("org.springframework.boot") version "3.5.9"
     id("io.spring.dependency-management") version "1.1.4"
     id("com.google.devtools.ksp") version "2.3.0"
+
+    jacoco
 }
 
 group = "com.decmoe47"
@@ -79,4 +81,36 @@ tasks.register<Test>("integrationTest") {
 // for SpEl in @PreAuthorize
 tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-parameters")
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test, tasks.named<Test>("integrationTest"))
+    executionData.setFrom(
+        fileTree(layout.buildDirectory) {
+            include(
+                "jacoco/test.exec",
+                "jacoco/integrationTest.exec"
+            )
+        }
+    )
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        html.outputLocation.set(file("$rootDir/coverage/jacoco"))
+        xml.outputLocation.set(file("$rootDir/coverage/jacoco.xml"))
+    }
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    "**/config/**",
+                    "**/constant/**",
+                    "**/exception/**",
+                    "**/model/**",
+                    "**/Main*",
+                    "**/*Application*"
+                )
+            }
+        })
+    )
 }

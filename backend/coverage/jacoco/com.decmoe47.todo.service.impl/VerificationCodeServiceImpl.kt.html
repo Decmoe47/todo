@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VerificationCodeServiceImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.service.impl</a> &gt; <span class="el_source">VerificationCodeServiceImpl.kt</span></div><h1>VerificationCodeServiceImpl.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.service.impl
+
+import com.decmoe47.todo.constant.RedisConstants
+import com.decmoe47.todo.constant.enums.ErrorCode
+import com.decmoe47.todo.exception.ErrorResponseException
+import com.decmoe47.todo.service.VerificationCodeService
+import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+import kotlin.random.Random
+
+<span class="fc" id="L12">@Service</span>
+<span class="fc" id="L13">class VerificationCodeServiceImpl(private val redisTemplate: RedisTemplate&lt;String, Any&gt;) : VerificationCodeService {</span>
+    override fun createCode(email: String): String {
+<span class="fc" id="L15">        val code: String = Random.nextInt(1001, 9999).toString()</span>
+<span class="fc" id="L16">        redisTemplate.opsForValue().set(</span>
+<span class="fc" id="L17">            RedisConstants.VERIFICATION_CODE.format(email), code, //NOSONAR</span>
+<span class="fc" id="L18">            5, TimeUnit.MINUTES</span>
+        )
+<span class="fc" id="L20">        return code</span>
+    }
+
+    override fun getCode(email: String): String =
+<span class="fc bfc" id="L24" title="All 4 branches covered.">        redisTemplate.opsForValue()[RedisConstants.VERIFICATION_CODE.format(email)] as? String</span>
+<span class="fc" id="L25">            ?: throw ErrorResponseException(ErrorCode.VERIFICATION_CODE_EXPIRED)</span>
+
+    override fun assertSameCode(source: String, target: String) {
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (source != target) throw ErrorResponseException(ErrorCode.VERIFICATION_CODE_INCORRECT)</span>
+<span class="fc" id="L29">    }</span>
+
+<span class="fc" id="L31">    override fun checkCode(target: String, email: String) = assertSameCode(getCode(email), target)</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

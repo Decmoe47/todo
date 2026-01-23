@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TokenServiceImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.service.impl</a> &gt; <span class="el_source">TokenServiceImpl.kt</span></div><h1>TokenServiceImpl.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.service.impl
+
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.exceptions.JWTVerificationException
+import com.decmoe47.todo.config.property.SecurityProperties
+import com.decmoe47.todo.constant.JwtConstants
+import com.decmoe47.todo.constant.RedisConstants
+import com.decmoe47.todo.constant.enums.ErrorCode
+import com.decmoe47.todo.exception.ErrorResponseException
+import com.decmoe47.todo.model.dto.SecurityUser
+import com.decmoe47.todo.model.response.AuthenticationTokensResponse
+import com.decmoe47.todo.service.TokenService
+import jakarta.annotation.Resource
+import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.stereotype.Service
+import java.util.*
+import java.util.concurrent.TimeUnit
+
+<span class="fc" id="L22">@Service</span>
+<span class="fc" id="L23">class TokenServiceImpl(</span>
+<span class="fc" id="L24">    private val securityProperties: SecurityProperties, @Resource private val redisTemplate: RedisTemplate&lt;String, Any?&gt;</span>
+) : TokenService {
+
+<span class="fc" id="L27">    private val algorithm by lazy { Algorithm.HMAC256(securityProperties.secretKey) }</span>
+
+    override fun generate(authentication: Authentication): AuthenticationTokensResponse {
+<span class="fc bfc" id="L30" title="All 4 branches covered.">        val user = authentication.principal as? SecurityUser ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc" id="L31">        return generate(user)</span>
+    }
+
+    override fun generate(user: SecurityUser): AuthenticationTokensResponse {
+<span class="fc" id="L35">        return AuthenticationTokensResponse(</span>
+<span class="fc" id="L36">            accessToken = generateToken(user, securityProperties.accessTokenTtl),</span>
+<span class="fc" id="L37">            refreshToken = generateToken(user, securityProperties.refreshTokenTtl)</span>
+        )
+    }
+
+    override fun parse(token: String): Authentication =
+<span class="fc" id="L42">        getUserFromToken(token).let { user -&gt;</span>
+<span class="fc" id="L43">            UsernamePasswordAuthenticationToken(user, token, user.getAuthorities())</span>
+<span class="fc" id="L44">        }</span>
+
+    override fun isValid(token: String): Boolean {
+<span class="fc" id="L47">        try {</span>
+<span class="fc" id="L48">            val verifier = JWT.require(algorithm).build()</span>
+<span class="fc" id="L49">            val jwt = verifier.verify(token.stripBearer())</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">            return !redisTemplate.hasKey(</span>
+<span class="fc" id="L51">                RedisConstants.BLACKLIST_TOKEN.format(jwt.id),</span>
+            )
+<span class="fc" id="L53">        } catch (_: JWTVerificationException) {</span>
+<span class="fc" id="L54">            return false</span>
+        }
+    }
+
+    override fun refresh(refreshToken: String): AuthenticationTokensResponse =
+<span class="fc" id="L59">        getUserFromToken(refreshToken, isRefreshToken = true).let { user -&gt;</span>
+<span class="fc" id="L60">            AuthenticationTokensResponse(generateToken(user, securityProperties.accessTokenTtl), refreshToken)</span>
+<span class="fc" id="L61">        }</span>
+
+    override fun invalidate(token: String) {
+<span class="fc" id="L64">        val jwt = JWT.decode(token.stripBearer())</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        val jwtId: String = jwt.id ?: throw ErrorResponseException(ErrorCode.ACCESS_TOKEN_EXPIRED)</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        val expiresAt: Long? = jwt.expiresAt?.time</span>
+
+<span class="fc" id="L68">        val blacklistTokenKey = RedisConstants.BLACKLIST_TOKEN.format(jwtId)</span>
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (expiresAt != null) {</span>
+<span class="fc" id="L71">            val currentTimeSeconds = System.currentTimeMillis()</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">            if (expiresAt &lt; currentTimeSeconds) {</span>
+                // Token已过期，直接返回
+<span class="fc" id="L74">                return</span>
+            }
+            // 计算Token剩余时间，将其加入黑名单
+<span class="fc" id="L77">            val expirationIn = expiresAt - currentTimeSeconds</span>
+<span class="fc" id="L78">            redisTemplate.opsForValue().set(blacklistTokenKey, &quot;&quot;, expirationIn, TimeUnit.SECONDS) //NOSONAR</span>
+        } else {
+            // 永不过期的Token永久加入黑名单
+<span class="fc" id="L81">            redisTemplate.opsForValue()[blacklistTokenKey] = &quot;&quot;</span>
+        }
+<span class="fc" id="L83">    }</span>
+
+    private fun generateToken(user: SecurityUser, ttl: Int): String {
+<span class="fc" id="L86">        val jwt = JWT.create()</span>
+<span class="fc" id="L87">            .withIssuedAt(Date())</span>
+<span class="fc" id="L88">            .withSubject(user.email)</span>
+<span class="fc" id="L89">            .withClaim(JwtConstants.USER_ID, user.id)</span>
+<span class="fc" id="L90">            .withClaim(JwtConstants.EMAIL, user.email)</span>
+<span class="fc" id="L91">            .withJWTId(UUID.randomUUID().toString())</span>
+
+        // 设置过期时间 -1 表示永不过期
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (ttl != -1) {</span>
+<span class="fc" id="L95">            val expiresAt = System.currentTimeMillis() + ttl * 1000L</span>
+<span class="fc" id="L96">            jwt.withExpiresAt(Date(expiresAt))</span>
+        }
+
+<span class="fc" id="L99">        return jwt.sign(algorithm)</span>
+    }
+
+<span class="fc" id="L102">    private fun getUserFromToken(token: String, isRefreshToken: Boolean = false): SecurityUser {</span>
+<span class="fc" id="L103">        val jwt = JWT.decode(token.stripBearer())</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        val cause = if (isRefreshToken) ErrorCode.REFRESH_TOKEN_EXPIRED else ErrorCode.ACCESS_TOKEN_EXPIRED</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        val userId = jwt.getClaim(JwtConstants.USER_ID).asLong() ?: throw ErrorResponseException(cause)</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        val email = jwt.getClaim(JwtConstants.EMAIL).asString() ?: throw ErrorResponseException(cause)</span>
+
+<span class="fc" id="L108">        return SecurityUser(id = userId, email = email)</span>
+    }
+
+<span class="fc" id="L111">    private fun String.stripBearer() = removePrefix(JwtConstants.BEARER_PREFIX)</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

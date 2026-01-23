@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccessCheckService.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.service.impl</a> &gt; <span class="el_source">AccessCheckService.kt</span></div><h1>AccessCheckService.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.service.impl
+
+import com.decmoe47.todo.annotation.ReadOnlyTransactionalService
+import com.decmoe47.todo.repository.TodoListRepository
+import com.decmoe47.todo.repository.TodoRepository
+import org.springframework.cache.CacheManager
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.cache.get
+
+<span class="fc" id="L10">@ReadOnlyTransactionalService</span>
+<span class="fc" id="L11">class AccessCheckService(</span>
+<span class="fc" id="L12">    private val todoListRepository: TodoListRepository,</span>
+<span class="fc" id="L13">    private val todoRepository: TodoRepository,</span>
+<span class="fc" id="L14">    private val cacheManager: CacheManager,</span>
+) {
+    @Cacheable(value = [&quot;todoListAccess&quot;], key = &quot;#userId + '_' + #todoListId&quot;)
+    fun ownsTodoListAccess(userId: Long, todoListId: Long): Boolean {
+<span class="fc" id="L18">        val todoList = todoListRepository.first(todoListId)</span>
+<span class="fc bfc" id="L19" title="All 4 branches covered.">        return todoList != null &amp;&amp; todoList.createdBy == userId</span>
+    }
+
+    fun ownsTodoAccess(userId: Long, todoId: Long): Boolean {
+<span class="fc" id="L23">        val todoAccess = cacheManager.getCache(&quot;todoAccess&quot;)</span>
+
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        val cached = todoAccess?.get&lt;Boolean&gt;(&quot;${userId}_${todoId}&quot;)</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        return if (cached != null) {</span>
+<span class="fc" id="L27">            true</span>
+        } else {
+<span class="fc" id="L29">            val todo = todoRepository.first(todoId)</span>
+
+<span class="fc bfc" id="L31" title="All 4 branches covered.">            val hasAccess = todo?.createdBy == userId</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">            todoAccess?.put(&quot;${userId}_${todoId}&quot;, hasAccess)</span>
+<span class="fc" id="L33">            hasAccess</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

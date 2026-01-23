@@ -4,11 +4,11 @@
 
 http://13.115.211.161:80/
 
-Register your own account or use the following accout to try: 
+Register your own account or use the following account to try: 
 - email: lingsq47@outlook.com
 - password: 123456
 
-## Technology stack
+## Tech stack
 
 - Frontend: Typescript, Vue 3, Element Plus, Vue Router, Pinia
 - Backend: Kotlin, Spring Boot 3, Spring Security, Komapper, Spring Cache, Kotest (JUint 5), TestContainers
@@ -22,3 +22,7 @@ Register your own account or use the following accout to try:
 - [x] Add, delete, and modify to-do lists.
 - [ ] Simple timer reminder function (such as task expiration date).
 - [ ] Create a team and share tasks within the team.
+
+## Test Coverage
+
+Download this repository and see the report [index.html](./backend/coverage/jacoco/index.html) in [backend/coverage/jacoco/](./backend/coverage/jacoco/)

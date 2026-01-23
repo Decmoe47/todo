@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserServiceImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.service.impl</a> &gt; <span class="el_source">UserServiceImpl.kt</span></div><h1>UserServiceImpl.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.service.impl
+
+import com.decmoe47.todo.annotation.ReadOnlyTransactionalService
+import com.decmoe47.todo.constant.enums.ErrorCode
+import com.decmoe47.todo.exception.ErrorResponseException
+import com.decmoe47.todo.model.dto.SecurityUser
+import com.decmoe47.todo.model.mapper.toUserResponse
+import com.decmoe47.todo.model.request.UserSearchRequest
+import com.decmoe47.todo.model.request.UserUpdateRequest
+import com.decmoe47.todo.model.response.UserResponse
+import com.decmoe47.todo.repository.UserRepository
+import com.decmoe47.todo.service.TokenService
+import com.decmoe47.todo.service.UserService
+import com.decmoe47.todo.service.VerificationCodeService
+import com.decmoe47.todo.util.toSecurityUser
+import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.transaction.annotation.Transactional
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
+
+<span class="fc" id="L21">@ReadOnlyTransactionalService</span>
+<span class="fc" id="L22">class UserServiceImpl(</span>
+<span class="fc" id="L23">    private val userRepository: UserRepository,</span>
+<span class="fc" id="L24">    private val verificationCodeService: VerificationCodeService,</span>
+<span class="fc" id="L25">    private val tokenService: TokenService,</span>
+) : UserService {
+    override fun getUser(userId: Long): UserResponse {
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        val user = userRepository.first(userId) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc" id="L29">        return user.toUserResponse()</span>
+    }
+
+    override fun searchUser(request: UserSearchRequest): List&lt;UserResponse&gt; {
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        request.id?.let { return listOf(getUser(it)) }</span>
+
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        request.email?.let { email -&gt;</span>
+<span class="fc" id="L36">            val users = userRepository.selectByEmail(email)</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">            if (users.isEmpty()) throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc" id="L38">            return users.map { it.toUserResponse() }</span>
+        }
+
+<span class="fc bfc" id="L41" title="All 2 branches covered.">        request.name?.let { name -&gt;</span>
+<span class="fc" id="L42">            val users = userRepository.selectByName(name)</span>
+<span class="fc bfc" id="L43" title="All 2 branches covered.">            if (users.isEmpty()) throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc" id="L44">            return users.map { it.toUserResponse() }</span>
+        }
+
+<span class="fc" id="L47">        throw ErrorResponseException(ErrorCode.NO_QUERY_PARAM_PROVIDED)</span>
+    }
+
+    @Transactional
+    override fun updateUser(userId: Long, request: UserUpdateRequest): UserResponse {
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        val user = userRepository.first(userId) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+
+<span class="fc" id="L54">        var updatedUser = user</span>
+<span class="fc bfc" id="L55" title="All 8 branches covered.">        request.name?.takeIf { it.isNotBlank() }?.let { updatedUser = updatedUser.copy(name = it) }</span>
+<span class="fc bfc" id="L56" title="All 8 branches covered.">        request.email?.takeIf { it.isNotBlank() }?.let { email -&gt;</span>
+<span class="fc" id="L57">            verificationCodeService.checkCode(request.verificationCode, email)</span>
+<span class="fc" id="L58">            updatedUser = updatedUser.copy(email = email)</span>
+<span class="fc" id="L59">        }</span>
+
+<span class="fc" id="L61">        return userRepository.update(updatedUser).toUserResponse()</span>
+    }
+
+    override fun getUserByToken(token: String): UserResponse {
+<span class="fc" id="L65">        val normalizedToken = normalizeToken(token)</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (!tokenService.isValid(normalizedToken)) {</span>
+<span class="fc" id="L67">            throw ErrorResponseException(ErrorCode.ACCESS_TOKEN_EXPIRED)</span>
+        }
+
+<span class="fc bfc" id="L70" title="All 4 branches covered.">        val principal = tokenService.parse(normalizedToken).principal as? SecurityUser</span>
+<span class="fc" id="L71">            ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        val user = userRepository.first(principal.id) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc" id="L73">        val tokens = tokenService.generate(user.toSecurityUser())</span>
+<span class="fc" id="L74">        return user.toUserResponse(tokens)</span>
+    }
+
+    override fun loadUserByUsername(email: String): UserDetails {
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        val user = userRepository.firstByEmail(email) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc" id="L79">        return user.toSecurityUser()</span>
+    }
+
+    private fun normalizeToken(token: String): String =
+<span class="fc" id="L83">        URLDecoder.decode(token, StandardCharsets.UTF_8).trim()</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

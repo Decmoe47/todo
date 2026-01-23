@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RequestLoggingFilter.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.filter</a> &gt; <span class="el_source">RequestLoggingFilter.kt</span></div><h1>RequestLoggingFilter.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.filter
+
+import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.servlet.FilterChain
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
+import org.springframework.web.filter.OncePerRequestFilter
+import org.springframework.web.util.ContentCachingRequestWrapper
+import org.springframework.web.util.ContentCachingResponseWrapper
+
+<span class="pc" id="L13">private val log = KotlinLogging.logger {}</span>
+
+<span class="fc" id="L15">@Component</span>
+class RequestLoggingFilter : OncePerRequestFilter() {
+    override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
+<span class="fc" id="L18">        val req = ContentCachingRequestWrapper(request)</span>
+<span class="fc" id="L19">        val res = ContentCachingResponseWrapper(response)</span>
+
+<span class="fc" id="L21">        try {</span>
+<span class="fc" id="L22">            chain.doFilter(req, res)</span>
+        } finally {
+<span class="fc bfc" id="L24" title="All 2 branches covered.">            val reqBody = if (req.contentType == MediaType.APPLICATION_JSON_VALUE)</span>
+<span class="fc" id="L25">                req.contentAsByteArray.toString(Charsets.UTF_8).take(2000)</span>
+<span class="fc" id="L26">            else &quot;(not a json body)&quot;</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">            val reqQueryString = if (req.queryString != null) &quot;?${req.queryString}&quot; else &quot;&quot;</span>
+
+<span class="fc" id="L29">            val resBody = res.contentAsByteArray.toString(Charsets.UTF_8).take(2000)</span>
+
+<span class="fc" id="L31">            log.info {</span>
+<span class="fc" id="L32">                &quot;[Request] ${request.method} ${request.requestURI}$reqQueryString $reqBody | [Response] ${res.status} $resBody&quot;</span>
+            }
+
+<span class="fc" id="L35">            res.copyBodyToResponse()</span>
+        }
+<span class="fc" id="L37">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

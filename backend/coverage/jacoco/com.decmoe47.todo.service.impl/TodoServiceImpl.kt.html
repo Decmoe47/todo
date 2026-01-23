@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TodoServiceImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.service.impl</a> &gt; <span class="el_source">TodoServiceImpl.kt</span></div><h1>TodoServiceImpl.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.service.impl
+
+import com.decmoe47.todo.annotation.ReadOnlyTransactionalService
+import com.decmoe47.todo.constant.enums.ErrorCode
+import com.decmoe47.todo.exception.ErrorResponseException
+import com.decmoe47.todo.model.entity.AuditableEntity
+import com.decmoe47.todo.model.entity.Todo
+import com.decmoe47.todo.model.mapper.toTodoResponse
+import com.decmoe47.todo.model.request.*
+import com.decmoe47.todo.model.response.TodoResponse
+import com.decmoe47.todo.repository.TodoListRepository
+import com.decmoe47.todo.repository.TodoRepository
+import com.decmoe47.todo.repository.UserRepository
+import com.decmoe47.todo.service.TodoService
+import com.decmoe47.todo.util.SecurityUtil
+import org.springframework.cache.CacheManager
+import org.springframework.transaction.annotation.Transactional
+
+<span class="fc" id="L19">@ReadOnlyTransactionalService</span>
+<span class="fc" id="L20">class TodoServiceImpl(</span>
+<span class="fc" id="L21">    private val todoRepo: TodoRepository,</span>
+<span class="fc" id="L22">    private val todoListRepo: TodoListRepository,</span>
+<span class="fc" id="L23">    private val userRepo: UserRepository,</span>
+<span class="fc" id="L24">    private val cacheManager: CacheManager,</span>
+) : TodoService {
+    override fun getTodos(listId: Long): List&lt;TodoResponse&gt; {
+<span class="fc" id="L27">        val todos = todoRepo.select(listId)</span>
+<span class="fc" id="L28">        return todos.map { it.toTodoResponse() }</span>
+    }
+
+    @Transactional
+    override fun addTodo(request: TodoAddRequest): TodoResponse {
+<span class="fc" id="L33">        val userId = SecurityUtil.getCurrentUserId()</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        val user = userRepo.first(userId) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        val todoList = todoListRepo.first(request.belongedListId)</span>
+<span class="fc" id="L36">            ?: throw ErrorResponseException(ErrorCode.TODO_LIST_NOT_FOUND)</span>
+
+<span class="fc" id="L38">        val todo = Todo(</span>
+<span class="fc" id="L39">            content = request.content,</span>
+<span class="fc" id="L40">            dueDate = request.dueDate,</span>
+<span class="fc" id="L41">            belongedListId = todoList.id,</span>
+<span class="fc" id="L42">            auditable = AuditableEntity(createdBy = user.id),</span>
+        )
+<span class="fc" id="L44">        return todoRepo.save(todo).toTodoResponse()</span>
+    }
+
+    @Transactional
+    override fun deleteTodo(request: TodoDeleteRequest) {
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (request.softDeleted) {</span>
+<span class="fc" id="L50">            todoRepo.softDelete(request.id)</span>
+        } else {
+<span class="fc" id="L52">            todoRepo.delete(request.id)</span>
+        }
+<span class="fc" id="L54">        clearCache(request.id)</span>
+<span class="fc" id="L55">    }</span>
+
+    @Transactional
+    override fun updateTodo(request: TodoUpdateRequest): TodoResponse {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        val todo = todoRepo.first(request.id)</span>
+<span class="fc" id="L60">            ?: throw ErrorResponseException(ErrorCode.TODO_NOT_FOUND)</span>
+<span class="fc" id="L61">        val updatedTodo = todo.copy(</span>
+<span class="fc" id="L62">            content = request.content,</span>
+<span class="fc" id="L63">            done = request.done,</span>
+<span class="fc" id="L64">            dueDate = request.dueDate,</span>
+<span class="fc" id="L65">            description = request.description,</span>
+<span class="fc" id="L66">            auditable = todo.auditable.copy(updatedBy = SecurityUtil.getCurrentUserId()),</span>
+        )
+<span class="fc" id="L68">        return todoRepo.update(updatedTodo).toTodoResponse()</span>
+    }
+
+    @Transactional
+    override fun toggleTodo(request: TodoToggleRequest): TodoResponse {
+<span class="fc" id="L73">        val userId = SecurityUtil.getCurrentUserId()</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        val todo = todoRepo.first(request.id)</span>
+<span class="fc" id="L75">            ?: throw ErrorResponseException(ErrorCode.TODO_NOT_FOUND)</span>
+
+<span class="fc" id="L77">        val updatedTodo = todoRepo.update(</span>
+<span class="fc" id="L78">            todo.copy(</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">                done = !todo.done,</span>
+<span class="fc" id="L80">                auditable = todo.auditable.copy(updatedBy = userId),</span>
+            )
+        )
+<span class="fc" id="L83">        return todoRepo.update(updatedTodo).toTodoResponse()</span>
+    }
+
+    @Transactional
+    override fun moveTodo(request: TodoMoveRequest): TodoResponse {
+<span class="fc" id="L88">        val userId = SecurityUtil.getCurrentUserId()</span>
+
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        val todo = todoRepo.first(request.id)</span>
+<span class="nc" id="L91">            ?: throw ErrorResponseException(ErrorCode.TODO_NOT_FOUND)</span>
+
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        val todoList = todoListRepo.first(request.targetListId)</span>
+<span class="fc" id="L94">            ?: throw ErrorResponseException(ErrorCode.TODO_LIST_NOT_FOUND)</span>
+
+<span class="fc" id="L96">        val updatedTodo = todo.copy(</span>
+<span class="fc" id="L97">            belongedListId = todoList.id,</span>
+<span class="fc" id="L98">            auditable = todo.auditable.copy(updatedBy = userId),</span>
+        )
+
+<span class="fc" id="L101">        return todoRepo.update(updatedTodo).toTodoResponse()</span>
+    }
+
+    private fun clearCache(todoId: Long) {
+<span class="fc" id="L105">        val todoAccess = cacheManager.getCache(&quot;todoAccess&quot;)</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        todoAccess?.evict(&quot;${SecurityUtil.getCurrentUserId()}_${todoId}&quot;)</span>
+<span class="fc" id="L107">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

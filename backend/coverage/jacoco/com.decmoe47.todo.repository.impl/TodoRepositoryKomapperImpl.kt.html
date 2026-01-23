@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TodoRepositoryKomapperImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.repository.impl</a> &gt; <span class="el_source">TodoRepositoryKomapperImpl.kt</span></div><h1>TodoRepositoryKomapperImpl.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.repository.impl
+
+import com.decmoe47.todo.model.entity.Todo
+import com.decmoe47.todo.model.entity.todo
+import com.decmoe47.todo.repository.TodoRepository
+import org.komapper.core.dsl.Meta
+import org.komapper.core.dsl.QueryDsl
+import org.komapper.core.dsl.query.firstOrNull
+import org.komapper.jdbc.JdbcDatabase
+import org.springframework.stereotype.Component
+
+<span class="fc" id="L12">@Component</span>
+<span class="fc" id="L13">class TodoRepositoryKomapperImpl(private val db: JdbcDatabase) : TodoRepository {</span>
+
+<span class="fc" id="L15">    private val t = Meta.todo</span>
+
+<span class="fc" id="L17">    override fun select(listId: Long): List&lt;Todo&gt; = db.runQuery {</span>
+<span class="fc" id="L18">        QueryDsl.from(t).where {</span>
+<span class="fc" id="L19">            t.belongedListId eq listId</span>
+<span class="fc" id="L20">        }</span>
+<span class="fc" id="L21">    }</span>
+
+<span class="fc" id="L23">    override fun first(id: Long): Todo? = db.runQuery {</span>
+<span class="fc" id="L24">        QueryDsl.from(t).where { t.id eq id }.firstOrNull()</span>
+<span class="fc" id="L25">    }</span>
+
+    override fun selectIn(ids: List&lt;Long&gt;): List&lt;Todo&gt; {
+<span class="nc bnc" id="L28" title="All 2 branches missed.">        if (ids.isEmpty()) return emptyList()</span>
+<span class="nc" id="L29">        return db.runQuery {</span>
+<span class="nc" id="L30">            QueryDsl.from(t).where { t.id inList ids }</span>
+        }
+    }
+
+<span class="fc" id="L34">    override fun save(todo: Todo): Todo = db.runQuery {</span>
+<span class="fc" id="L35">        QueryDsl.insert(t).single(todo)</span>
+<span class="fc" id="L36">    }</span>
+
+<span class="fc" id="L38">    override fun update(todo: Todo): Todo = db.runQuery {</span>
+<span class="fc" id="L39">        QueryDsl.update(t).single(todo)</span>
+<span class="fc" id="L40">    }</span>
+
+    override fun delete(id: Long) {
+<span class="fc" id="L43">        db.runQuery {</span>
+<span class="fc" id="L44">            QueryDsl.delete(t).where { t.id eq id }</span>
+        }
+<span class="fc" id="L46">    }</span>
+
+    override fun deleteByBelongedListId(belongedListId: Long) {
+<span class="fc" id="L49">        db.runQuery {</span>
+<span class="fc" id="L50">            QueryDsl.delete(t).where { t.belongedListId eq belongedListId }</span>
+        }
+<span class="fc" id="L52">    }</span>
+
+    override fun softDelete(id: Long) {
+<span class="nc" id="L55">        db.runQuery {</span>
+<span class="nc" id="L56">            QueryDsl.update(t).set { t.auditable.deleted eq true }.where { t.id eq id }</span>
+        }
+<span class="nc" id="L58">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

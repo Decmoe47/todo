@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthServiceImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.service.impl</a> &gt; <span class="el_source">AuthServiceImpl.kt</span></div><h1>AuthServiceImpl.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.service.impl
+
+import com.decmoe47.todo.annotation.ReadOnlyTransactionalService
+import com.decmoe47.todo.constant.MailTemplate
+import com.decmoe47.todo.constant.enums.ErrorCode
+import com.decmoe47.todo.exception.ErrorResponseException
+import com.decmoe47.todo.model.dto.SecurityUser
+import com.decmoe47.todo.model.entity.AuditableEntity
+import com.decmoe47.todo.model.entity.TodoList
+import com.decmoe47.todo.model.entity.User
+import com.decmoe47.todo.model.mapper.toUser
+import com.decmoe47.todo.model.mapper.toUserResponse
+import com.decmoe47.todo.model.request.UserLoginRequest
+import com.decmoe47.todo.model.request.UserRegisterRequest
+import com.decmoe47.todo.model.response.AuthenticationTokensResponse
+import com.decmoe47.todo.model.response.UserResponse
+import com.decmoe47.todo.repository.TodoListRepository
+import com.decmoe47.todo.repository.UserRepository
+import com.decmoe47.todo.service.AuthService
+import com.decmoe47.todo.service.MailService
+import com.decmoe47.todo.service.TokenService
+import com.decmoe47.todo.service.VerificationCodeService
+import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
+
+<span class="fc" id="L32">@ReadOnlyTransactionalService</span>
+<span class="fc" id="L33">class AuthServiceImpl(</span>
+<span class="fc" id="L34">    private val mailService: MailService,</span>
+<span class="fc" id="L35">    private val tokenService: TokenService,</span>
+<span class="fc" id="L36">    private val verificationCodeService: VerificationCodeService,</span>
+<span class="fc" id="L37">    private val authenticationManager: AuthenticationManager,</span>
+<span class="fc" id="L38">    private val userRepository: UserRepository,</span>
+<span class="fc" id="L39">    private val todoListRepository: TodoListRepository,</span>
+) : AuthService {
+    @Transactional
+    override fun login(request: UserLoginRequest): UserResponse {
+<span class="fc" id="L43">        val authentication: Authentication = authenticate(request.email, request.password)</span>
+<span class="pc bpc" id="L44" title="2 of 4 branches missed.">        val principal = authentication.principal as? SecurityUser</span>
+<span class="nc" id="L45">            ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">        val user = userRepository.first(principal.id) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc" id="L47">        val authenticationTokensResponse: AuthenticationTokensResponse = tokenService.generate(authentication)</span>
+
+<span class="fc" id="L49">        return user.toUserResponse(authenticationTokensResponse)</span>
+    }
+
+    override fun logout(token: String) {
+<span class="fc" id="L53">        tokenService.invalidate(token)</span>
+<span class="fc" id="L54">        SecurityContextHolder.clearContext()</span>
+<span class="fc" id="L55">    }</span>
+
+    @Transactional
+    override fun register(request: UserRegisterRequest): UserResponse {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (userRepository.firstByEmail(request.email) != null)</span>
+<span class="fc" id="L60">            throw ErrorResponseException(ErrorCode.USER_ALREADY_EXISTS)</span>
+
+<span class="fc" id="L62">        verificationCodeService.checkCode(request.verificationCode, request.email)</span>
+
+<span class="fc" id="L64">        val tmpUser: User = request.toUser()</span>
+<span class="fc" id="L65">        val user = saveNewUser(tmpUser)</span>
+
+<span class="fc" id="L67">        val todoList = TodoList(name = &quot;Inbox&quot;, inbox = true, auditable = AuditableEntity(createdBy = user.id))</span>
+<span class="fc" id="L68">        todoListRepository.save(todoList)</span>
+
+<span class="fc" id="L70">        return user.toUserResponse()</span>
+    }
+
+    override fun sendVerificationCode(email: String) {
+<span class="fc" id="L74">        val code = verificationCodeService.createCode(email)</span>
+<span class="fc" id="L75">        val sent = mailService.send(</span>
+<span class="fc" id="L76">            listOf(email),</span>
+<span class="fc" id="L77">            MailTemplate.VERIFICATION_CODE_SUBJECT,</span>
+<span class="fc" id="L78">            MailTemplate.VERIFICATION_CODE_BODY.replace(&quot;{code}&quot;, code)</span>
+        )
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (!sent)</span>
+<span class="fc" id="L81">            throw ErrorResponseException(ErrorCode.VERIFICATION_CODE_SEND_FAILED)</span>
+<span class="fc" id="L82">    }</span>
+
+    override fun refreshAccessToken(refreshToken: String): AuthenticationTokensResponse {
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (!tokenService.isValid(refreshToken))</span>
+<span class="fc" id="L86">            throw ErrorResponseException(ErrorCode.REFRESH_TOKEN_EXPIRED)</span>
+<span class="fc" id="L87">        return tokenService.refresh(refreshToken)</span>
+    }
+
+    private fun authenticate(email: String, password: String): Authentication {
+<span class="fc" id="L91">        try {</span>
+<span class="fc" id="L92">            val token = UsernamePasswordAuthenticationToken(email, password)</span>
+<span class="fc" id="L93">            val authentication = authenticationManager.authenticate(token)</span>
+
+<span class="fc bfc" id="L95" title="All 4 branches covered.">            val principal = authentication.principal as? SecurityUser</span>
+<span class="fc" id="L96">                ?: throw ErrorResponseException(ErrorCode.USERNAME_OR_PASSWORD_INCORRECT)</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">            val user = userRepository.first(principal.id)</span>
+<span class="nc" id="L98">                ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+<span class="fc" id="L99">            userRepository.update(user.copy(lastLoginTime = LocalDateTime.now()))</span>
+
+<span class="fc" id="L101">            SecurityContextHolder.getContext().authentication = authentication</span>
+<span class="fc" id="L102">            return authentication</span>
+<span class="fc" id="L103">        } catch (e: BadCredentialsException) {</span>
+<span class="fc" id="L104">            throw ErrorResponseException(ErrorCode.USERNAME_OR_PASSWORD_INCORRECT, e)</span>
+        }
+    }
+
+    private fun saveNewUser(user: User): User {
+<span class="fc" id="L109">        val bCryptPasswordEncoder = BCryptPasswordEncoder()</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        val encodedPassword = bCryptPasswordEncoder.encode(user.password)</span>
+<span class="nc" id="L111">            ?: throw ErrorResponseException(ErrorCode.INTERNAL_SERVER_ERROR, &quot;密码加密失败！&quot;)</span>
+<span class="fc" id="L112">        val user = user.copy(password = encodedPassword)</span>
+<span class="fc" id="L113">        return userRepository.save(user)</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

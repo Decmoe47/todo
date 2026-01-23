@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MailServiceImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.service.impl</a> &gt; <span class="el_source">MailServiceImpl.kt</span></div><h1>MailServiceImpl.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.service.impl
+
+import com.decmoe47.todo.service.MailService
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.mail.MailException
+import org.springframework.mail.SimpleMailMessage
+import org.springframework.mail.javamail.JavaMailSender
+import org.springframework.stereotype.Service
+
+<span class="pc" id="L11">private val log = KotlinLogging.logger {}</span>
+
+<span class="fc" id="L13">@Service</span>
+<span class="fc" id="L14">class MailServiceImpl(</span>
+<span class="fc" id="L15">    private val mailSender: JavaMailSender,</span>
+
+<span class="fc" id="L17">    @param:Value($$&quot;${spring.mail.from}&quot;)</span>
+    private val from: String
+) : MailService {
+    override fun send(to: List&lt;String&gt;, subject: String, content: String): Boolean {
+<span class="fc" id="L21">        val message = SimpleMailMessage()</span>
+<span class="fc" id="L22">        message.from = from</span>
+<span class="fc" id="L23">        message.setTo(*to.toTypedArray())</span>
+<span class="fc" id="L24">        message.subject = subject</span>
+<span class="fc" id="L25">        message.text = content</span>
+<span class="fc" id="L26">        try {</span>
+<span class="fc" id="L27">            mailSender.send(message)</span>
+<span class="fc" id="L28">            log.info { &quot;邮件成功发送给${to.joinToString()}!&quot; }</span>
+<span class="fc" id="L29">            return true</span>
+<span class="fc" id="L30">        } catch (e: MailException) {</span>
+<span class="fc" id="L31">            log.error(e) { &quot;发送邮件失败:&quot; }</span>
+<span class="fc" id="L32">            return false</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

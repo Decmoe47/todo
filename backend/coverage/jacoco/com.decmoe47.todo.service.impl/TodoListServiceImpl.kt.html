@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TodoListServiceImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.service.impl</a> &gt; <span class="el_source">TodoListServiceImpl.kt</span></div><h1>TodoListServiceImpl.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.service.impl
+
+import com.decmoe47.todo.annotation.ReadOnlyTransactionalService
+import com.decmoe47.todo.constant.enums.ErrorCode
+import com.decmoe47.todo.exception.ErrorResponseException
+import com.decmoe47.todo.model.entity.AuditableEntity
+import com.decmoe47.todo.model.entity.TodoList
+import com.decmoe47.todo.model.mapper.toTodoListResponse
+import com.decmoe47.todo.model.request.TodoListAddRequest
+import com.decmoe47.todo.model.request.TodoListDeleteRequest
+import com.decmoe47.todo.model.request.TodoListUpdateRequest
+import com.decmoe47.todo.model.response.TodoListResponse
+import com.decmoe47.todo.repository.TodoListRepository
+import com.decmoe47.todo.repository.TodoRepository
+import com.decmoe47.todo.repository.UserRepository
+import com.decmoe47.todo.service.TodoListService
+import com.decmoe47.todo.util.SecurityUtil
+import org.springframework.cache.CacheManager
+import org.springframework.transaction.annotation.Transactional
+
+<span class="fc" id="L21">@ReadOnlyTransactionalService</span>
+<span class="fc" id="L22">class TodoListServiceImpl(</span>
+<span class="fc" id="L23">    private val todoListRepo: TodoListRepository,</span>
+<span class="fc" id="L24">    private val todoRepo: TodoRepository,</span>
+<span class="fc" id="L25">    private val userRepo: UserRepository,</span>
+<span class="fc" id="L26">    private val cacheManager: CacheManager,</span>
+) : TodoListService {
+    override fun getAll(): List&lt;TodoListResponse&gt; {
+<span class="fc" id="L29">        val userId = SecurityUtil.getCurrentUserId()</span>
+<span class="fc" id="L30">        val lists = todoListRepo.selectAll(userId)</span>
+<span class="fc" id="L31">        return lists.map { it.toTodoListResponse() }</span>
+    }
+
+    @Transactional
+    override fun add(request: TodoListAddRequest): TodoListResponse {
+<span class="fc" id="L36">        val userId = SecurityUtil.getCurrentUserId()</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        val user = userRepo.first(userId) ?: throw ErrorResponseException(ErrorCode.USER_NOT_FOUND)</span>
+
+<span class="fc" id="L39">        val todoList = TodoList(</span>
+<span class="fc" id="L40">            name = request.name,</span>
+<span class="fc" id="L41">            auditable = AuditableEntity(createdBy = user.id),</span>
+        )
+<span class="fc" id="L43">        return todoListRepo.save(todoList).toTodoListResponse()</span>
+    }
+
+    @Transactional
+    override fun update(request: TodoListUpdateRequest): TodoListResponse {
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        val todoList = todoListRepo.first(request.id)</span>
+<span class="fc" id="L49">            ?: throw ErrorResponseException(ErrorCode.TODO_LIST_NOT_FOUND)</span>
+<span class="fc" id="L50">        val updated = todoList.copy(</span>
+<span class="fc" id="L51">            name = request.name,</span>
+<span class="fc" id="L52">            auditable = todoList.auditable.copy(updatedBy = SecurityUtil.getCurrentUserId()),</span>
+        )
+<span class="fc" id="L54">        return todoListRepo.update(updated).toTodoListResponse()</span>
+    }
+
+    @Transactional
+    override fun delete(request: TodoListDeleteRequest) {
+<span class="fc" id="L59">        val todos = todoRepo.select(request.id)</span>
+<span class="fc" id="L60">        val todoIds = todos.map { it.id }</span>
+
+<span class="fc" id="L62">        todoRepo.deleteByBelongedListId(request.id)</span>
+<span class="fc" id="L63">        todoListRepo.delete(request.id)</span>
+<span class="fc" id="L64">        clearCache(request.id, todoIds)</span>
+<span class="fc" id="L65">    }</span>
+
+    private fun clearCache(todoListId: Long, todoIds: List&lt;Long&gt;) {
+<span class="fc" id="L68">        val userId = SecurityUtil.getCurrentUserId()</span>
+<span class="fc" id="L69">        val todoListAccess = cacheManager.getCache(&quot;todoListAccess&quot;)</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        todoListAccess?.evict(&quot;${userId}_${todoListId}&quot;)</span>
+
+<span class="fc" id="L72">        val todoAccess = cacheManager.getCache(&quot;todoAccess&quot;)</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (todoAccess != null) {</span>
+<span class="fc" id="L74">            todoIds.forEach { todoId -&gt;</span>
+<span class="fc" id="L75">                todoAccess.evict(&quot;${userId}_${todoId}&quot;)</span>
+<span class="fc" id="L76">            }</span>
+        }
+<span class="fc" id="L78">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GlobalExceptionHandler.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.handler</a> &gt; <span class="el_source">GlobalExceptionHandler.kt</span></div><h1>GlobalExceptionHandler.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.handler
+
+import com.decmoe47.todo.constant.enums.ErrorCode
+import com.decmoe47.todo.exception.ErrorResponseException
+import com.decmoe47.todo.model.response.Response
+import com.decmoe47.todo.util.R
+import com.decmoe47.todo.util.SecurityUtil
+import com.decmoe47.todo.util.rootCause
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.servlet.http.HttpServletRequest
+import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.authorization.AuthorizationDeniedException
+import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.RestControllerAdvice
+
+<span class="pc" id="L19">private val log = KotlinLogging.logger {}</span>
+
+<span class="fc" id="L21">@RestControllerAdvice(basePackages = [&quot;com.decmoe47.todo.controller&quot;])</span>
+class GlobalExceptionHandler {
+    @ExceptionHandler(Throwable::class)
+    fun handleException(request: HttpServletRequest, e: Throwable): ResponseEntity&lt;out Response&lt;Any&gt;&gt; {
+<span class="fc" id="L25">        return when (val rootCause = e.rootCause()) {</span>
+<span class="fc bfc" id="L26" title="All 2 branches covered.">            is ErrorResponseException -&gt; handleErrorResponseException(rootCause)</span>
+<span class="fc bfc" id="L27" title="All 2 branches covered.">            is AuthorizationDeniedException -&gt; handleAuthorizationDeniedException(request, rootCause)</span>
+            else -&gt; {
+<span class="fc" id="L29">                log.error(rootCause) { &quot;${rootCause.message}&quot; }</span>
+<span class="fc" id="L30">                R.error(ErrorCode.INTERNAL_SERVER_ERROR)</span>
+            }
+        }
+    }
+
+    @ExceptionHandler(ErrorResponseException::class)
+    fun handleErrorResponseException(e: ErrorResponseException): ResponseEntity&lt;out Response&lt;Any&gt;&gt; {
+<span class="fc" id="L37">        log.error(e.rootCause()) { &quot;${e.rootCause().message}&quot; }</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        return if (e.data != null) R.error(e.errorCode, e.data)</span>
+<span class="fc" id="L39">        else R.error(e.errorCode)</span>
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException::class)
+    fun handleAuthorizationDeniedException(
+        request: HttpServletRequest,
+        e: AuthorizationDeniedException
+    ): ResponseEntity&lt;out Response&lt;Any&gt;&gt; {
+<span class="fc" id="L47">        log.error(e) { &quot;Failed to authorize for userId: ${SecurityUtil.getCurrentUserId()} and api: ${request.requestURI}&quot; }</span>
+<span class="fc" id="L48">        return R.error(ErrorCode.ACCESS_DENIED)</span>
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handleValidationException(
+        request: HttpServletRequest,
+        e: MethodArgumentNotValidException
+    ): ResponseEntity&lt;out Response&lt;Any&gt;&gt; {
+<span class="nc" id="L56">        log.error(e) { &quot;Failed to validate the request for userId: ${SecurityUtil.getCurrentUserId()} and api: ${request.requestURI}&quot; }</span>
+<span class="nc" id="L57">        return R.error(ErrorCode.INVALID_REQUEST_PARAMS)</span>
+    }
+
+    /**
+     * 对于kotlin非空基本类型编译后成为java基本类型的字段校验，jackson会直接返回默认值，导致逃过了 `@NotNull` 校验。
+     * 开启jackson的 `FAIL_ON_NULL_FOR_PRIMITIVES` 后则会抛出异常，然后在全局异常处理中伪装成和spring校验失败时一样的response，
+     * 以此来解决该问题。
+     *
+     * @see tools.jackson.databind.deser.std.StdDeserializer._verifyNullForPrimitive
+     */
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleHttpMessageNotReadable(ex: HttpMessageNotReadableException): ResponseEntity&lt;Map&lt;String, Any&gt;&gt; {
+<span class="fc" id="L69">        val cause = ex.cause</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (cause is MismatchedInputException) {</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            val fieldName = cause.path.joinToString(&quot;.&quot;) { it.fieldName ?: &quot;&quot; }</span>
+
+<span class="pc bpc" id="L73" title="3 of 6 branches missed.">            val errorMsg = if (cause.targetType?.isPrimitive == true</span>
+<span class="pc bpc" id="L74" title="1 of 6 branches missed.">                &amp;&amp; cause.message?.contains(&quot;FAIL_ON_NULL_FOR_PRIMITIVES&quot;) == true</span>
+<span class="fc" id="L75">            ) &quot;Field [$fieldName] does not exist or is null.&quot;</span>
+<span class="fc" id="L76">            else &quot;Field [$fieldName] has wrong type.&quot;</span>
+
+<span class="fc" id="L78">            return ResponseEntity.badRequest().body(</span>
+<span class="fc" id="L79">                mapOf(</span>
+<span class="fc" id="L80">                    &quot;code&quot; to 400,</span>
+<span class="fc" id="L81">                    &quot;field&quot; to fieldName,</span>
+<span class="fc" id="L82">                    &quot;message&quot; to errorMsg</span>
+                )
+            )
+        }
+<span class="fc" id="L86">        return ResponseEntity.badRequest().body(mapOf(&quot;message&quot; to &quot;The request body is invalid.&quot;))</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

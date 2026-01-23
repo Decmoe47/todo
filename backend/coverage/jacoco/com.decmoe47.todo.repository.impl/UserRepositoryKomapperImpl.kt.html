@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserRepositoryKomapperImpl.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">todo_backend</a> &gt; <a href="index.source.html" class="el_package">com.decmoe47.todo.repository.impl</a> &gt; <span class="el_source">UserRepositoryKomapperImpl.kt</span></div><h1>UserRepositoryKomapperImpl.kt</h1><pre class="source lang-java linenums">package com.decmoe47.todo.repository.impl
+
+import com.decmoe47.todo.model.entity.User
+import com.decmoe47.todo.model.entity.user
+import com.decmoe47.todo.repository.UserRepository
+import org.komapper.core.dsl.Meta
+import org.komapper.core.dsl.QueryDsl
+import org.komapper.core.dsl.query.firstOrNull
+import org.komapper.jdbc.JdbcDatabase
+import org.springframework.stereotype.Component
+
+<span class="fc" id="L12">@Component</span>
+<span class="fc" id="L13">class UserRepositoryKomapperImpl(private val db: JdbcDatabase) : UserRepository {</span>
+
+<span class="fc" id="L15">    private val u = Meta.user</span>
+
+<span class="fc" id="L17">    override fun first(id: Long): User? = db.runQuery {</span>
+<span class="fc" id="L18">        QueryDsl.from(u).where { u.id eq id }.firstOrNull()</span>
+<span class="fc" id="L19">    }</span>
+
+<span class="fc" id="L21">    override fun firstByEmail(email: String): User? = db.runQuery {</span>
+<span class="fc" id="L22">        QueryDsl.from(u).where { u.email eq email }.firstOrNull()</span>
+<span class="fc" id="L23">    }</span>
+
+<span class="nc" id="L25">    override fun selectByEmail(email: String): List&lt;User&gt; = db.runQuery {</span>
+<span class="nc" id="L26">        QueryDsl.from(u).where { u.email eq email }</span>
+<span class="nc" id="L27">    }</span>
+
+<span class="nc" id="L29">    override fun selectByName(username: String): List&lt;User&gt; = db.runQuery {</span>
+<span class="nc" id="L30">        QueryDsl.from(u).where { u.name eq username }</span>
+<span class="nc" id="L31">    }</span>
+
+<span class="fc" id="L33">    override fun save(user: User): User = db.runQuery {</span>
+<span class="fc" id="L34">        QueryDsl.insert(u).single(user)</span>
+<span class="fc" id="L35">    }</span>
+
+<span class="fc" id="L37">    override fun update(user: User): User = db.runQuery {</span>
+<span class="fc" id="L38">        QueryDsl.update(u).single(user)</span>
+<span class="fc" id="L39">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

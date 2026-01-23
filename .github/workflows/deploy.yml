@@ -1,11 +1,20 @@
-name: Build & Deploy
+name: CI / Build / Deploy
 
 on:
-  workflow_run:
-    workflows: ["Tests"]
-    types: [completed]
-
+  pull_request:
+  push:
+    branches: ["main"]
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - tests
+          - deploy
+          - all
 
 permissions:
   contents: read
@@ -17,15 +26,72 @@ env:
   IMAGE_FRONTEND: decmoe47/todo-frontend
 
 jobs:
-  build_and_push:
-    # 自动触发必须 CI 成功且 main；手动触发永远允许（即“跳过测试”）
-    if: >
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.head_branch == 'main')
-      || github.event_name == 'workflow_dispatch'
-
+  tests:
+    name: Tests
     runs-on: ubuntu-latest
+    # push/pr：永远跑 tests
+    # 手动：mode=tests 或 all 才跑
+    if: >
+      github.event_name != 'workflow_dispatch' ||
+      inputs.mode == 'tests' ||
+      inputs.mode == 'all'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 24 (Zulu)
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: "24"
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run unit + integration tests + coverage
+        working-directory: backend
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon clean test integrationTest jacocoTestReport
+
+      - name: Add coverage to PR
+        if: github.event_name == 'pull_request'
+        uses: madrapps/jacoco-report@v1.7.1
+        with:
+          paths: backend/coverage/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 70
+          min-coverage-changed-files: 60
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            backend/build/reports/tests
+            backend/build/test-results
+
+      - name: Upload coverage report (HTML)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-html
+          path: backend/coverage/jacoco
+
+  build_and_push:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    needs: [tests]
+
+    # 手动：mode=deploy 或 all 才跑
+    # mode=all：要求 tests 成功
+    # mode=deploy：允许跳过 tests（tests job 会被跳过），因此用 always() 放开 needs
+    if: >
+      always() &&
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.mode == 'deploy' || inputs.mode == 'all') &&
+      (inputs.mode == 'deploy' || needs.tests.result == 'success')
 
     steps:
       - name: Checkout
@@ -112,8 +178,17 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
   deploy:
-    needs: build_and_push
+    name: Deploy
     runs-on: ubuntu-latest
+    needs: [build_and_push]
+
+    # 手动：mode=deploy 或 all 才跑
+    # 并且 build_and_push 必须成功
+    if: >
+      always() &&
+      github.event_name == 'workflow_dispatch' &&
+      (inputs.mode == 'deploy' || inputs.mode == 'all') &&
+      needs.build_and_push.result == 'success'
 
     steps:
       - name: Deploy on server via SSH (docker compose pull & up)
