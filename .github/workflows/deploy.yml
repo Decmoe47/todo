@@ -1,4 +1,4 @@
-name: CI / Build / Deploy
+name: CI/CD
 
 on:
   pull_request:
@@ -29,8 +29,9 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
-    # push/pr：永远跑 tests
-    # 手动：mode=tests 或 all 才跑
+    # PR: always run
+    # push main: run
+    # manual: run only when mode=tests or all
     if: >
       github.event_name != 'workflow_dispatch' ||
       inputs.mode == 'tests' ||
@@ -84,14 +85,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [tests]
 
-    # 手动：mode=deploy 或 all 才跑
-    # mode=all：要求 tests 成功
-    # mode=deploy：允许跳过 tests（tests job 会被跳过），因此用 always() 放开 needs
+    # push main: run (tests must have succeeded)
+    # manual: run when mode=deploy or all
+    # PR: never run
     if: >
-      always() &&
-      github.event_name == 'workflow_dispatch' &&
-      (inputs.mode == 'deploy' || inputs.mode == 'all') &&
-      (inputs.mode == 'deploy' || needs.tests.result == 'success')
+      (github.event_name == 'push' && needs.tests.result == 'success') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.mode == 'deploy' || inputs.mode == 'all') && (inputs.mode == 'deploy' || needs.tests.result == 'success'))
 
     steps:
       - name: Checkout
@@ -182,13 +181,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build_and_push]
 
-    # 手动：mode=deploy 或 all 才跑
-    # 并且 build_and_push 必须成功
+    # push main: run if build_and_push succeeded
+    # manual: run when mode=deploy or all AND build_and_push succeeded
+    # PR: never run
     if: >
-      always() &&
-      github.event_name == 'workflow_dispatch' &&
-      (inputs.mode == 'deploy' || inputs.mode == 'all') &&
-      needs.build_and_push.result == 'success'
+      (github.event_name == 'push' && needs.build_and_push.result == 'success') ||
+      (github.event_name == 'workflow_dispatch' && (inputs.mode == 'deploy' || inputs.mode == 'all') && needs.build_and_push.result == 'success')
 
     steps:
       - name: Deploy on server via SSH (docker compose pull & up)
@@ -207,5 +205,4 @@ jobs:
             docker compose pull
             docker compose up -d --remove-orphans
 
-            # 适度清理，防止服务器爆盘（保留正在用的镜像）
             docker image prune -f
